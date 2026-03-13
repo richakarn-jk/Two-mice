@@ -1,235 +1,379 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two Mice POS - Online System</title>
+    <title>Two Mice POS (Pro Version)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
-        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .menu-card { transition: all 0.2s; cursor: pointer; }
-        .menu-card:active { transform: scale(0.95); }
-    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap'); body { font-family: 'Kanit', sans-serif; }</style>
 </head>
-<body>
-
-    <nav class="bg-indigo-700 text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 class="text-xl font-bold flex items-center">Two Mice POS 🖱️</h1>
-            <div class="flex space-x-2">
-                <button onclick="showTab('pos')" class="px-4 py-2 rounded-lg hover:bg-indigo-800 transition">หน้าขาย</button>
-                <button onclick="showTab('dash')" class="px-4 py-2 rounded-lg hover:bg-indigo-800 transition">สรุปยอด</button>
-                <button onclick="showTab('crm')" class="px-4 py-2 rounded-lg hover:bg-indigo-800 transition">สมาชิก</button>
-            </div>
+<body class="bg-gray-100">
+    <nav class="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
+        <h1 class="font-bold text-xl">Two Mice POS 🖱️</h1>
+        <div class="flex space-x-2 text-sm">
+            <button onclick="showTab('pos')" class="bg-blue-900 px-3 py-2 rounded-lg hover:bg-blue-800 transition">หน้าร้าน</button>
+            <button onclick="showTab('dash')" class="bg-blue-900 px-3 py-2 rounded-lg hover:bg-blue-800 transition">ยอดขาย & Excel</button>
+            <button onclick="showTab('crm')" class="bg-blue-900 px-3 py-2 rounded-lg hover:bg-blue-800 transition">สมาชิก</button>
+            <button onclick="showTab('admin')" class="bg-red-600 px-3 py-2 rounded-lg hover:bg-red-500 transition">จัดการเมนู</button>
         </div>
     </nav>
 
-    <div class="max-w-6xl mx-auto p-4">
-        
-        <div id="pos" class="tab-content active">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2">
-                    <div id="menu-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        </div>
+    <div id="pos" class="tab-content p-4">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div id="menu-container" class="lg:col-span-2 space-y-6 pb-20">
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-xl border h-fit sticky top-24">
-                    <h2 class="text-lg font-bold mb-4 border-b pb-2">ออเดอร์ปัจจุบัน</h2>
-                    <input type="text" id="custPhone" placeholder="เบอร์โทรสะสมแต้ม" class="w-full p-3 mb-4 border rounded-xl text-center text-lg focus:ring-2 focus:ring-indigo-500 outline-none">
-                    <div id="cart-list" class="space-y-2 mb-4 max-h-60 overflow-y-auto font-light"></div>
-                    <div class="border-t pt-4">
-                        <div class="flex justify-between text-2xl font-bold text-indigo-700">
-                            <span>ยอดรวม:</span>
-                            <span><span id="total-price">0</span>.-</span>
-                        </div>
-                        <button onclick="checkout()" class="w-full bg-green-500 text-white py-4 rounded-xl mt-4 font-bold text-xl shadow-lg hover:bg-green-600 transition">ยืนยันการขาย</button>
-                    </div>
+            
+            <div class="bg-white p-5 rounded-2xl shadow-lg border h-fit sticky top-24">
+                <h2 class="font-bold text-lg mb-3">ตะกร้าปัจจุบัน</h2>
+                <input type="tel" id="custPhone" placeholder="เบอร์โทรสะสมแต้ม (ไม่ใส่ก็ได้)" class="w-full p-3 mb-3 border-2 border-gray-200 rounded-xl text-center text-lg focus:outline-none focus:border-blue-500 transition">
+                <div id="cart" class="space-y-2 mb-4 max-h-64 overflow-y-auto pr-2"></div>
+                <div class="border-t-2 border-dashed pt-4 font-bold flex justify-between text-2xl text-blue-700">
+                    <span>ยอดรวม:</span> <span><span id="total">0</span> ฿</span>
                 </div>
+                <button onclick="checkout()" id="btn-sell" class="w-full bg-green-500 text-white py-4 rounded-xl mt-4 font-bold text-xl shadow-md active:scale-95 transition-all hover:bg-green-600">💸 ยืนยันการขาย</button>
+                <button onclick="clearCart()" class="w-full bg-gray-200 text-gray-700 py-2 rounded-xl mt-2 font-bold text-sm shadow-sm active:scale-95 transition-all">ล้างตะกร้า</button>
             </div>
         </div>
+    </div>
 
-        <div id="dash" class="tab-content">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div class="bg-white p-6 rounded-xl shadow border-l-8 border-green-500 text-center">
-                    <p class="text-gray-500 uppercase text-xs tracking-wider">ยอดขายรวม (บาท)</p>
-                    <h3 id="stat-money" class="text-4xl font-bold text-gray-800">0</h3>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow border-l-8 border-blue-500 text-center">
-                    <p class="text-gray-500 uppercase text-xs tracking-wider">จำนวนแก้วทั้งหมด</p>
-                    <h3 id="stat-cups" class="text-4xl font-bold text-gray-800">0</h3>
-                </div>
+    <div id="dash" class="tab-content hidden p-4 max-w-5xl mx-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold">สรุปยอดขาย</h2>
+            <button onclick="exportExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold shadow-md hover:bg-green-500">📊 โหลดไฟล์ Excel</button>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-4 text-center">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-l-8 border-green-500">
+                <p class="text-gray-500 text-sm font-bold">ยอดเงินรวม</p>
+                <p class="text-4xl font-bold text-green-600"><span id="sum-m">0</span> ฿</p>
             </div>
-            <div class="bg-white rounded-xl shadow overflow-hidden">
-                <table class="w-full text-left">
-                    <thead class="bg-gray-100 text-gray-600 text-sm">
-                        <tr>
-                            <th class="p-4">เวลา</th>
-                            <th class="p-4">รายการ</th>
-                            <th class="p-4 text-right">จำนวนเงิน</th>
-                            <th class="p-4 text-center">ลบ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sales-history" class="divide-y"></tbody>
-                </table>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-l-8 border-blue-500">
+                <p class="text-gray-500 text-sm font-bold">จำนวนแก้วรวม</p>
+                <p class="text-4xl font-bold text-blue-600"><span id="sum-c">0</span> แก้ว</p>
             </div>
         </div>
-
-        <div id="crm" class="tab-content">
-            <div class="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-2xl border text-center">
-                <h2 class="text-2xl font-bold mb-6">ค้นหาสมาชิก</h2>
-                <input type="text" id="searchPhone" placeholder="กรอกเบอร์โทรศัพท์" class="w-full p-4 border rounded-2xl mb-4 text-center text-2xl">
-                <button onclick="checkPoints()" class="w-full bg-indigo-600 text-white py-3 rounded-2xl font-bold hover:bg-indigo-700 transition">ตรวจสอบแต้ม</button>
-                <div id="point-box" class="hidden mt-8 p-6 bg-indigo-50 rounded-2xl border-2 border-indigo-100">
-                    <p class="text-gray-500">แต้มสะสมทั้งหมด</p>
-                    <h1 id="res-points" class="text-6xl font-bold text-indigo-700 my-2">0</h1>
-                    <p class="text-sm text-indigo-400">1 แก้ว = 1 แต้ม</p>
-                </div>
-            </div>
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-100 border-b">
+                    <tr><th class="p-3">วัน-เวลา</th><th class="p-3">รายการ</th><th class="p-3">เบอร์โทร</th><th class="p-3 text-right">ยอดเงิน</th><th class="p-3 text-center">ลบ</th></tr>
+                </thead>
+                <tbody id="log"></tbody>
+            </table>
         </div>
+    </div>
 
+    <div id="crm" class="tab-content hidden p-4">
+        <div class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-md text-center mt-10 border">
+            <h2 class="text-2xl font-bold mb-4">เช็คแต้มสะสม</h2>
+            <input type="tel" id="fPhone" placeholder="กรอกเบอร์โทรศัพท์" class="w-full p-3 border-2 rounded-xl mb-4 text-center text-xl">
+            <button onclick="searchPoints()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-blue-500 transition">ค้นหา</button>
+            <div id="pts" class="text-5xl font-bold text-blue-600 mt-6">-</div>
+        </div>
+    </div>
+
+    <div id="admin" class="tab-content hidden p-4 max-w-3xl mx-auto">
+        <div class="bg-white p-6 rounded-2xl shadow-md border mb-6">
+            <h2 class="text-xl font-bold mb-4 text-red-600">➕ เพิ่มเมนูใหม่</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                <input type="text" id="newCat" placeholder="หมวดหมู่ (เช่น กาแฟ)" class="p-2 border rounded">
+                <input type="text" id="newName" placeholder="ชื่อสินค้า" class="p-2 border rounded md:col-span-2">
+                <input type="number" id="newPrice" placeholder="ราคา" class="p-2 border rounded">
+            </div>
+            <button onclick="addNewMenu()" class="w-full bg-red-600 text-white py-2 rounded-lg mt-3 font-bold hover:bg-red-500">บันทึกเมนูใหม่</button>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-md border">
+            <h2 class="text-xl font-bold mb-4">รายการเมนูทั้งหมดในระบบ</h2>
+            <div id="admin-menu-list" class="space-y-2"></div>
+        </div>
     </div>
 
     <script>
-        // --- ส่วนการตั้งค่า Firebase ที่คุณให้มา ---
+        // --- 1. การเชื่อมต่อ Firebase Firestore ---
         const firebaseConfig = {
             apiKey: "AIzaSyCTZ9MqTirZkosidhpHgnlH4a5TR_XxhLA",
             authDomain: "two-mice-57341.firebaseapp.com",
             projectId: "two-mice-57341",
             storageBucket: "two-mice-57341.firebasestorage.app",
             messagingSenderId: "361252970949",
-            appId: "1:361252970949:web:038eb1395257cb8d4cabac",
-            measurementId: "G-WHWXFE123B"
+            appId: "1:361252970949:web:038eb1395257cb8d4cabac"
         };
-
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        const db = firebase.firestore();
 
-        // ข้อมูลเมนูทั้งหมด
-        const menuItems = [
-            {n: 'ดาร์กวาเลท', p: 29, c: 'ทูโทน'}, {n: 'ดาร์กแมนดาริน', p: 29, c: 'ทูโทน'}, {n: 'ดาร์กคอฟฟี่', p: 29, c: 'ทูโทน'}, {n: 'ดาร์กบราว', p: 29, c: 'ทูโทน'}, {n: 'เขียวสตอ', p: 29, c: 'ทูโทน'},
-            {n: 'มอคคา', p: 20, c: 'กาแฟ'}, {n: 'คาปูชิโน', p: 20, c: 'กาแฟ'}, {n: 'ลาเต้', p: 20, c: 'กาแฟ'},
-            {n: 'ไต้หวันบราว', p: 20, c: 'บราวชูการ์'}, {n: 'ชาไทยบราว', p: 20, c: 'บราวชูการ์'}, {n: 'ชาเขียวบราว', p: 20, c: 'บราวชูการ์'},
-            {n: 'ไต้หวัน', p: 20, c: 'ชาธรรมดา'}, {n: 'ชาเขียว', p: 20, c: 'ชาธรรมดา'}, {n: 'ชาไทย', p: 20, c: 'ชาธรรมดา'},
-            {n: 'เผือก', p: 20, c: 'นมสด'}, {n: 'แคนตาลูป', p: 20, c: 'นมสด'}, {n: 'สตอ', p: 20, c: 'นมสด'}, {n: 'ส้มแมนดาริน', p: 20, c: 'นมสด'},
-            {n: 'ดาร์กนมสด', p: 29, c: 'นมสดธรรมดา'}, {n: 'เขียวสตอ', p: 20, c: 'ชาใส'}, {n: 'ลิ้นจี่', p: 20, c: 'โซดา'}, {n: 'โค้ก', p: 25, c: 'น้ำอัดลม'},
-            {n: 'ไข่มุก', p: 0, c: 'ท้อปปิ้ง'}
+        // --- 2. ข้อมูลเมนูเริ่มต้น (ตามที่คุณสั่งเป๊ะๆ) ---
+        const initialMenus = [
+            { c: 'ทูโทน', n: 'ดาร์กวาเลท', p: 29 }, { c: 'ทูโทน', n: 'ดาร์กแมนดาริน', p: 29 }, { c: 'ทูโทน', n: 'ดาร์กคอฟฟี่', p: 29 }, { c: 'ทูโทน', n: 'ดาร์กบราว', p: 29 }, { c: 'ทูโทน', n: 'เขียวสตอ', p: 29 },
+            { c: 'กาแฟ', n: 'มอคคา', p: 20 }, { c: 'กาแฟ', n: 'คาปูชิโน', p: 20 }, { c: 'กาแฟ', n: 'ลาเต้', p: 20 },
+            { c: 'บราวชูการ์', n: 'ไต้หวันบราว', p: 20 }, { c: 'บราวชูการ์', n: 'ชาไทยบราว', p: 20 }, { c: 'บราวชูการ์', n: 'ชาเขียวบราว', p: 20 },
+            { c: 'ชาธรรมดา', n: 'ไต้หวัน', p: 20 }, { c: 'ชาธรรมดา', n: 'ชาเขียว', p: 20 }, { c: 'ชาธรรมดา', n: 'ชาไทย', p: 20 },
+            { c: 'นมสดผลไม้', n: 'เผือก', p: 20 }, { c: 'นมสดผลไม้', n: 'แคนตาลูป', p: 20 }, { c: 'นมสดผลไม้', n: 'กล้วยหอม', p: 20 }, { c: 'นมสดผลไม้', n: 'ข้าวโพด', p: 20 }, { c: 'นมสดผลไม้', n: 'สตอ', p: 20 }, { c: 'นมสดผลไม้', n: 'บลูเบอรี่', p: 20 }, { c: 'นมสดผลไม้', n: 'ส้มแมนดาริน', p: 20 }, { c: 'นมสดผลไม้', n: 'กีวี่', p: 20 }, { c: 'นมสดผลไม้', n: 'แอปเปิ้ล', p: 20 },
+            { c: 'นมสดธรรมดา', n: 'ชมพู', p: 20 }, { c: 'นมสดธรรมดา', n: 'นมสด', p: 20 }, { c: 'นมสดธรรมดา', n: 'นมสดบราว', p: 20 }, { c: 'นมสดธรรมดา', n: 'ดาร์กนมสด', p: 29 },
+            { c: 'ชาใส', n: 'เขียวสตอ', p: 20 }, { c: 'ชาใส', n: 'เขียวลิ้นจี่', p: 20 }, { c: 'ชาใส', n: 'เขียวบลู', p: 20 }, { c: 'ชาใส', n: 'เขียวแอป', p: 20 }, { c: 'ชาใส', n: 'เขียวส้ม', p: 20 }, { c: 'ชาใส', n: 'เขียวน้ำผึ้ง', p: 20 },
+            { c: 'โซดา', n: 'สตอ', p: 20 }, { c: 'โซดา', n: 'บลูเบอร์', p: 20 }, { c: 'โซดา', n: 'บลูฮา', p: 20 }, { c: 'โซดา', n: 'แดง', p: 20 }, { c: 'โซดา', n: 'ส้ม', p: 20 }, { c: 'โซดา', n: 'ลิ้นจี่', p: 20 }, { c: 'โซดา', n: 'แอป', p: 20 }, { c: 'โซดา', n: 'กีวี่', p: 20 }, { c: 'โซดา', n: 'น้ำผึ้ง', p: 20 },
+            { c: 'น้ำอัดลม', n: 'โค้ก', p: 25 }, { c: 'น้ำอัดลม', n: 'โค้กซี', p: 25 }, { c: 'น้ำอัดลม', n: 'สไปร์ท', p: 25 }, { c: 'น้ำอัดลม', n: 'เขียว', p: 25 }, { c: 'น้ำอัดลม', n: 'แดง', p: 25 }, { c: 'น้ำอัดลม', n: 'ฟ้า', p: 25 }, { c: 'น้ำอัดลม', n: 'ม่วง', p: 25 },
+            { c: 'ท้อปปิ้ง', n: 'ไข่มุก', p: 0 }
         ];
 
+        let menuList = [];
         let cart = [];
+        let salesHistory = []; // ไว้เก็บข้อมูลทำ Excel
 
-        // แสดงรายการเมนู
+        // โหลดเมนูจาก Firestore (ถ้าเพิ่งเปิดครั้งแรก จะยัดค่าเริ่มต้นให้)
+        async function loadMenu() {
+            const docRef = db.collection("settings").doc("menuData");
+            const doc = await docRef.get();
+            if (doc.exists) {
+                menuList = doc.data().items;
+            } else {
+                await docRef.set({ items: initialMenus });
+                menuList = initialMenus;
+            }
+            renderMenu();
+            renderAdminMenu();
+        }
+
+        // แสดงหมวดหมู่และเมนูในหน้า POS
         function renderMenu() {
-            const grid = document.getElementById('menu-grid');
-            menuItems.forEach(item => {
-                grid.innerHTML += `
-                    <div onclick="addToCart('${item.n}', ${item.p})" class="menu-card bg-white p-4 rounded-xl shadow-sm border-b-4 border-indigo-200 hover:border-indigo-500">
-                        <p class="text-[10px] text-gray-400 uppercase">${item.c}</p>
-                        <p class="font-bold text-gray-700">${item.n}</p>
-                        <p class="text-indigo-600 font-bold">${item.p}.-</p>
-                    </div>`;
+            const container = document.getElementById('menu-container');
+            container.innerHTML = '';
+            
+            // ดึงหมวดหมู่ทั้งหมดออกมาโดยไม่ซ้ำกัน (เรียงท้อปปิ้งไว้ท้ายสุด)
+            const categories = [...new Set(menuList.map(m => m.c))];
+            if(categories.includes('ท้อปปิ้ง')) {
+                categories.push(categories.splice(categories.indexOf('ท้อปปิ้ง'), 1)[0]);
+            }
+
+            categories.forEach(cat => {
+                const itemsInCat = menuList.filter(m => m.c === cat);
+                let html = `
+                <div class="mb-6">
+                    <h3 class="font-bold text-xl mb-3 text-gray-700 border-b-2 pb-1 border-blue-200 pl-2 border-l-4 border-l-blue-500">${cat}</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">`;
+                
+                itemsInCat.forEach((m, idx) => {
+                    const globalIdx = menuList.findIndex(x => x.n === m.n && x.c === m.c);
+                    html += `
+                        <div onclick="addCart(${globalIdx})" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-400 active:scale-95 transition-all cursor-pointer flex flex-col justify-between h-full">
+                            <p class="font-bold text-sm text-gray-800">${m.n}</p>
+                            <p class="text-blue-600 font-bold text-lg mt-1 text-right">${m.p}.-</p>
+                        </div>`;
+                });
+                html += `</div></div>`;
+                container.innerHTML += html;
             });
         }
 
-        function addToCart(name, price) {
-            cart.push({ name, price });
-            updateCartUI();
+        // --- 3. ระบบตะกร้าสินค้า ---
+        function addCart(idx) { 
+            cart.push({...menuList[idx], cartId: Date.now() + Math.random()}); 
+            updateCartUI(); 
+        }
+        
+        function removeCart(cartId) { 
+            cart = cart.filter(item => item.cartId !== cartId); 
+            updateCartUI(); 
+        }
+
+        function clearCart() {
+            cart = []; updateCartUI();
         }
 
         function updateCartUI() {
-            const list = document.getElementById('cart-list');
-            let total = 0; list.innerHTML = '';
-            cart.forEach((item, index) => {
-                total += item.price;
-                list.innerHTML += `<div class="flex justify-between items-center bg-gray-50 p-2 rounded-lg">
-                    <span>${item.name}</span>
-                    <div><span class="font-bold mr-2">${item.price}</span>
-                    <button onclick="cart.splice(${index},1);updateCartUI()" class="text-red-400">✕</button></div>
-                </div>`;
+            const area = document.getElementById('cart');
+            let t = 0; area.innerHTML = '';
+            cart.forEach(it => { 
+                t += it.p; 
+                area.innerHTML += `
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
+                    <span class="text-sm font-bold text-gray-700">${it.n}</span>
+                    <div class="flex items-center">
+                        <b class="mr-3 text-blue-700">${it.p}.-</b>
+                        <button onclick="removeCart(${it.cartId})" class="bg-red-100 text-red-600 w-6 h-6 rounded-full flex items-center justify-center font-bold hover:bg-red-200">✕</button>
+                    </div>
+                </div>`; 
             });
-            document.getElementById('total-price').innerText = total;
+            document.getElementById('total').innerText = t;
         }
 
+        // --- 4. กดยืนยันการขาย ---
         async function checkout() {
-            if (cart.length === 0) return;
-            const phone = document.getElementById('custPhone').value.trim() || "ทั่วไป";
-            const total = parseInt(document.getElementById('total-price').innerText);
-            const cups = cart.filter(i => i.price > 0).length;
+            if(!cart.length) return alert('กรุณาเลือกเมนูก่อนครับ');
+            const btn = document.getElementById('btn-sell');
+            btn.disabled = true; btn.innerText = "กำลังบันทึก...";
+            
+            try {
+                let ph = document.getElementById('custPhone').value.trim();
+                if (!ph) ph = 'ทั่วไป'; // ถ้าไม่ใส่เบอร์ ให้เป็นลูกค้าทั่วไป
+                
+                // นับจำนวนแก้ว (เมนูราคา 0 บาท เช่น ไข่มุก จะไม่ถูกนับเป็น 1 แก้ว)
+                const cupsCount = cart.filter(i => i.p > 0).length;
+                const totalBaht = parseInt(document.getElementById('total').innerText);
+                
+                // บันทึกลงตารางยอดขาย
+                await db.collection("sales").add({
+                    time: firebase.firestore.FieldValue.serverTimestamp(),
+                    items: cart,
+                    total: totalBaht,
+                    cups: cupsCount,
+                    phone: ph
+                });
 
-            const saleData = {
-                time: Date.now(),
-                items: cart,
-                total: total,
-                cups: cups,
-                customer: phone
-            };
+                // อัปเดตแต้ม (เฉพาะคนที่มีเบอร์)
+                if(ph !== 'ทั่วไป' && cupsCount > 0) {
+                    const memRef = db.collection("members").doc(ph);
+                    await db.runTransaction(async (t) => {
+                        const doc = await t.get(memRef);
+                        const newPoints = (doc.exists ? doc.data().points : 0) + cupsCount;
+                        t.set(memRef, { points: newPoints }, { merge: true });
+                    });
+                }
 
-            const newSaleRef = db.ref('sales').push();
-            await newSaleRef.set(saleData);
-
-            if (phone !== "ทั่วไป") {
-                db.ref('members/' + phone).transaction(current => (current || 0) + cups);
+                alert('✅ บันทึกยอดขายสำเร็จ!');
+                clearCart(); 
+                document.getElementById('custPhone').value = '';
+            } catch (e) {
+                alert('เกิดข้อผิดพลาด: ' + e.message);
             }
-
-            cart = [];
-            document.getElementById('custPhone').value = '';
-            updateCartUI();
-            alert("บันทึกการขายสำเร็จ!");
+            btn.disabled = false; btn.innerText = "💸 ยืนยันการขาย";
         }
 
-        // ระบบ Real-time Dashboard
-        db.ref('sales').on('value', snapshot => {
-            const data = snapshot.val();
-            const history = document.getElementById('sales-history');
-            let totalM = 0; let totalC = 0;
-            history.innerHTML = '';
+        // --- 5. โหลดประวัติและลบข้อมูล (Dashboard) ---
+        db.collection("sales").orderBy("time", "desc").limit(100).onSnapshot(snap => {
+            salesHistory = []; // รีเซ็ตข้อมูลที่จะใช้ทำ Excel
+            const l = document.getElementById('log');
+            let sumM = 0, sumC = 0;
+            l.innerHTML = '';
+            
+            snap.forEach(doc => {
+                const s = doc.data();
+                const id = doc.id;
+                salesHistory.push({id, ...s}); // เก็บลง Array
+                
+                sumM += s.total || 0;
+                sumC += s.cups || 0;
+                
+                let timeStr = "กำลังประมวลผล";
+                if(s.time) {
+                    const d = s.time.toDate();
+                    timeStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                }
 
-            if (data) {
-                Object.keys(data).reverse().forEach(id => {
-                    const s = data[id];
-                    totalM += s.total; totalC += s.cups;
-                    const date = new Date(s.time).toLocaleTimeString();
-                    history.innerHTML += `
-                        <tr>
-                            <td class="p-4 text-xs text-gray-400">${date}</td>
-                            <td class="p-4 text-sm">${s.items.map(i => i.name).join(', ')}<br><small class="text-gray-400">เบอร์: ${s.customer}</small></td>
-                            <td class="p-4 text-right font-bold text-indigo-600">${s.total}.-</td>
-                            <td class="p-4 text-center"><button onclick="deleteSale('${id}')" class="text-red-300 hover:text-red-600">🗑️</button></td>
-                        </tr>`;
-                });
-            }
-            document.getElementById('stat-money').innerText = totalM.toLocaleString();
-            document.getElementById('stat-cups').innerText = totalC.toLocaleString();
+                l.innerHTML += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3 text-xs text-gray-500">${timeStr}</td>
+                    <td class="p-3 text-sm">${s.items.map(i=>i.n).join(', ')}</td>
+                    <td class="p-3 text-sm text-gray-600">${s.phone}</td>
+                    <td class="p-3 font-bold text-right text-green-600">${s.total}</td>
+                    <td class="p-3 text-center"><button onclick="deleteSale('${id}', '${s.phone}', ${s.cups})" class="text-red-500 hover:text-red-700 bg-red-50 px-2 py-1 rounded">🗑️ ลบ</button></td>
+                </tr>`;
+            });
+            document.getElementById('sum-m').innerText = sumM;
+            document.getElementById('sum-c').innerText = sumC;
         });
 
-        async function deleteSale(id) {
-            if (!confirm("ยืนยันการลบรายการนี้? แต้มของลูกค้าจะถูกหักคืนด้วย")) return;
-            const snap = await db.ref('sales/' + id).once('value');
-            const sale = snap.val();
-            if (sale.customer !== "ทั่วไป") {
-                db.ref('members/' + sale.customer).transaction(current => (current || 0) - sale.cups);
-            }
-            db.ref('sales/' + id).remove();
+        // ฟังก์ชันลบรายการขายและดึงแต้มคืน
+        async function deleteSale(id, phone, cups) {
+            if(!confirm("⚠️ คุณแน่ใจหรือไม่ว่าจะลบรายการนี้? (ระบบจะหักเงินออก และหักแต้มลูกค้าคืน)")) return;
+            try {
+                await db.collection("sales").doc(id).delete();
+                // หักแต้มคืน
+                if(phone && phone !== 'ทั่วไป' && cups > 0) {
+                    const memRef = db.collection("members").doc(phone);
+                    await db.runTransaction(async t => {
+                        const doc = await t.get(memRef);
+                        if(doc.exists) {
+                            let pts = doc.data().points - cups;
+                            t.set(memRef, {points: pts < 0 ? 0 : pts}, {merge: true});
+                        }
+                    });
+                }
+                alert("ลบรายการสำเร็จ");
+            } catch(e) { alert("ลบไม่สำเร็จ: " + e.message); }
         }
 
-        function checkPoints() {
-            const phone = document.getElementById('searchPhone').value;
-            db.ref('members/' + phone).once('value', snap => {
-                document.getElementById('point-box').classList.remove('hidden');
-                document.getElementById('res-points').innerText = snap.val() || 0;
+        // --- 6. ส่งออกเป็น Excel (CSV) ---
+        function exportExcel() {
+            if(salesHistory.length === 0) return alert('ไม่มีข้อมูลยอดขายให้โหลดครับ');
+            
+            // ใส่ BOM ให้ Excel อ่านภาษาไทยออก
+            let csvContent = '\uFEFF'; 
+            csvContent += "วันที่-เวลา,รายการสินค้า,เบอร์ลูกค้า,จำนวนแก้ว,ยอดเงิน(บาท)\n";
+            
+            salesHistory.forEach(s => {
+                let t = s.time ? s.time.toDate().toLocaleString('th-TH') : 'N/A';
+                let itemsStr = s.items.map(i => i.n).join(' + ');
+                csvContent += `${t},"${itemsStr}",${s.phone},${s.cups},${s.total}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `สรุปยอดขาย_TwoMice.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- 7. จัดการเมนูหลังร้าน ---
+        function renderAdminMenu() {
+            const list = document.getElementById('admin-menu-list');
+            list.innerHTML = '';
+            menuList.forEach((m, i) => {
+                list.innerHTML += `
+                <div class="flex justify-between items-center border-b p-2 bg-gray-50 rounded">
+                    <div>
+                        <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-2">${m.c}</span>
+                        <span class="font-bold">${m.n}</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-green-600 font-bold">${m.p}.-</span>
+                        <button onclick="deleteMenuAdmin(${i})" class="text-red-500 hover:bg-red-100 px-2 py-1 rounded text-sm">ลบทิ้ง</button>
+                    </div>
+                </div>`;
             });
         }
 
-        function showTab(id) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+        async function addNewMenu() {
+            const c = document.getElementById('newCat').value.trim();
+            const n = document.getElementById('newName').value.trim();
+            const p = parseInt(document.getElementById('newPrice').value);
+            if(!c || !n || isNaN(p)) return alert('กรอกข้อมูลให้ครบและราคาต้องเป็นตัวเลขครับ');
+            
+            menuList.push({c, n, p});
+            await db.collection("settings").doc("menuData").set({items: menuList});
+            
+            document.getElementById('newCat').value = '';
+            document.getElementById('newName').value = '';
+            document.getElementById('newPrice').value = '';
+            alert('เพิ่มเมนูสำเร็จ');
+            renderMenu(); renderAdminMenu();
         }
 
-        renderMenu();
+        async function deleteMenuAdmin(idx) {
+            if(!confirm("ต้องการลบเมนูนี้ออกจากระบบใช่หรือไม่?")) return;
+            menuList.splice(idx, 1);
+            await db.collection("settings").doc("menuData").set({items: menuList});
+            renderMenu(); renderAdminMenu();
+        }
+
+        // --- ระบบสลับแท็บและอื่นๆ ---
+        function searchPoints() {
+            const p = document.getElementById('fPhone').value.trim();
+            if(!p) return;
+            db.collection("members").doc(p).get().then(doc => {
+                document.getElementById('pts').innerText = doc.exists ? doc.data().points + " แต้ม" : "0 แต้ม";
+            });
+        }
+
+        function showTab(t) {
+            document.querySelectorAll('.tab-content').forEach(e => e.classList.add('hidden'));
+            document.getElementById(t).classList.remove('hidden');
+        }
+
+        // เริ่มต้นการทำงานเมื่อโหลดเว็บ
+        loadMenu();
     </script>
 </body>
 </html>
