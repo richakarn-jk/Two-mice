@@ -3,93 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two Mice POS (Pro Version)</title>
+    <title>Two Mice POS (Ultimate Version)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap'); body { font-family: 'Kanit', sans-serif; }</style>
 </head>
 <body class="bg-gray-100">
-    <nav class="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
+    <nav class="bg-blue-800 text-white p-4 shadow-md sticky top-0 z-50 flex flex-wrap justify-between items-center gap-2">
         <h1 class="font-bold text-xl">Two Mice POS 🖱️</h1>
-        <div class="flex space-x-2 text-sm">
-            <button onclick="showTab('pos')" class="bg-blue-900 px-3 py-2 rounded-lg hover:bg-blue-800 transition">หน้าร้าน</button>
-            <button onclick="showTab('dash')" class="bg-blue-900 px-3 py-2 rounded-lg hover:bg-blue-800 transition">ยอดขาย & Excel</button>
-            <button onclick="showTab('crm')" class="bg-blue-900 px-3 py-2 rounded-lg hover:bg-blue-800 transition">สมาชิก</button>
-            <button onclick="showTab('admin')" class="bg-red-600 px-3 py-2 rounded-lg hover:bg-red-500 transition">จัดการเมนู</button>
+        <div class="flex space-x-2 text-sm overflow-x-auto pb-1">
+            <button onclick="showTab('pos')" class="bg-blue-900 px-3 py-2 rounded-lg hover:bg-blue-700 transition whitespace-nowrap">หน้าร้าน</button>
+            <button onclick="showTab('dash')" class="bg-blue-900 px-3 py-2 rounded-lg hover:bg-blue-700 transition whitespace-nowrap">ยอดขาย & กราฟ</button>
+            <button onclick="showTab('crm')" class="bg-blue-900 px-3 py-2 rounded-lg hover:bg-blue-700 transition whitespace-nowrap">สะสมแต้ม</button>
+            <button onclick="showTab('admin')" class="bg-red-600 px-3 py-2 rounded-lg hover:bg-red-500 transition whitespace-nowrap">ตั้งค่า/เมนู</button>
         </div>
     </nav>
 
     <div id="pos" class="tab-content p-4">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div id="menu-container" class="lg:col-span-2 space-y-6 pb-20">
-                </div>
+            <div id="menu-container" class="lg:col-span-2 space-y-6 pb-20"></div>
             
             <div class="bg-white p-5 rounded-2xl shadow-lg border h-fit sticky top-24">
                 <h2 class="font-bold text-lg mb-3">ตะกร้าปัจจุบัน</h2>
-                <input type="tel" id="custPhone" placeholder="เบอร์โทรสะสมแต้ม (ไม่ใส่ก็ได้)" class="w-full p-3 mb-3 border-2 border-gray-200 rounded-xl text-center text-lg focus:outline-none focus:border-blue-500 transition">
+                <input type="tel" id="custPhone" placeholder="เบอร์โทรสะสมแต้ม (ไม่ใส่ก็ได้)" class="w-full p-3 mb-3 border-2 border-gray-200 rounded-xl text-center text-lg focus:outline-none focus:border-blue-500">
                 <div id="cart" class="space-y-2 mb-4 max-h-64 overflow-y-auto pr-2"></div>
-                <div class="border-t-2 border-dashed pt-4 font-bold flex justify-between text-2xl text-blue-700">
+                <div class="border-t-2 border-dashed pt-4 font-bold flex justify-between text-2xl text-blue-800">
                     <span>ยอดรวม:</span> <span><span id="total">0</span> ฿</span>
                 </div>
-                <button onclick="checkout()" id="btn-sell" class="w-full bg-green-500 text-white py-4 rounded-xl mt-4 font-bold text-xl shadow-md active:scale-95 transition-all hover:bg-green-600">💸 ยืนยันการขาย</button>
+                <button onclick="checkout()" id="btn-sell" class="w-full bg-green-600 text-white py-4 rounded-xl mt-4 font-bold text-xl shadow-md active:scale-95 transition-all hover:bg-green-500">💸 ยืนยันการขาย</button>
                 <button onclick="clearCart()" class="w-full bg-gray-200 text-gray-700 py-2 rounded-xl mt-2 font-bold text-sm shadow-sm active:scale-95 transition-all">ล้างตะกร้า</button>
             </div>
         </div>
     </div>
 
-    <div id="dash" class="tab-content hidden p-4 max-w-5xl mx-auto">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold">สรุปยอดขาย</h2>
-            <button onclick="exportExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold shadow-md hover:bg-green-500">📊 โหลดไฟล์ Excel</button>
+    <div id="dash" class="tab-content hidden p-4 max-w-6xl mx-auto">
+        <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+            <h2 class="text-2xl font-bold">📊 สรุปยอดขาย</h2>
+            <div class="flex gap-2">
+                <select id="timeFilter" onchange="applyFilter()" class="border-2 p-2 rounded-lg font-bold text-gray-700 outline-none focus:border-blue-500">
+                    <option value="today">วันนี้</option>
+                    <option value="yesterday">เมื่อวาน</option>
+                    <option value="thisWeek">สัปดาห์นี้ (จ.-อา.)</option>
+                    <option value="lastWeek">สัปดาห์ที่แล้ว</option>
+                    <option value="thisMonth">เดือนนี้</option>
+                    <option value="lastMonth">เดือนที่แล้ว</option>
+                    <option value="all">ทั้งหมด</option>
+                </select>
+                <button onclick="exportExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold shadow-md hover:bg-green-500">โหลด Excel</button>
+            </div>
         </div>
+
         <div class="grid grid-cols-2 gap-4 mb-4 text-center">
             <div class="bg-white p-6 rounded-2xl shadow-sm border-l-8 border-green-500">
                 <p class="text-gray-500 text-sm font-bold">ยอดเงินรวม</p>
-                <p class="text-4xl font-bold text-green-600"><span id="sum-m">0</span> ฿</p>
+                <p class="text-3xl md:text-4xl font-bold text-green-600"><span id="sum-m">0</span> ฿</p>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border-l-8 border-blue-500">
                 <p class="text-gray-500 text-sm font-bold">จำนวนแก้วรวม</p>
-                <p class="text-4xl font-bold text-blue-600"><span id="sum-c">0</span> แก้ว</p>
+                <p class="text-3xl md:text-4xl font-bold text-blue-600"><span id="sum-c">0</span> แก้ว</p>
             </div>
         </div>
+
+        <div class="bg-white p-4 rounded-2xl shadow-sm border mb-4">
+            <h3 class="font-bold text-gray-600 mb-2">📈 กราฟจำนวนแก้วแยกตามชั่วโมง (ช่วงเวลาที่เลือก)</h3>
+            <div class="relative h-64 w-full"><canvas id="salesChart"></canvas></div>
+        </div>
+
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden border">
-            <table class="w-full text-left text-sm">
-                <thead class="bg-gray-100 border-b">
-                    <tr><th class="p-3">วัน-เวลา</th><th class="p-3">รายการ</th><th class="p-3">เบอร์โทร</th><th class="p-3 text-right">ยอดเงิน</th><th class="p-3 text-center">ลบ</th></tr>
-                </thead>
-                <tbody id="log"></tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm min-w-[600px]">
+                    <thead class="bg-gray-100 border-b">
+                        <tr><th class="p-3">วัน-เวลา (GMT+7)</th><th class="p-3">รายการ</th><th class="p-3">เบอร์โทร</th><th class="p-3 text-right">ยอดเงิน</th><th class="p-3 text-center">จัดการ</th></tr>
+                    </thead>
+                    <tbody id="log"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <div id="crm" class="tab-content hidden p-4">
-        <div class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-md text-center mt-10 border">
-            <h2 class="text-2xl font-bold mb-4">เช็คแต้มสะสม</h2>
-            <input type="tel" id="fPhone" placeholder="กรอกเบอร์โทรศัพท์" class="w-full p-3 border-2 rounded-xl mb-4 text-center text-xl">
-            <button onclick="searchPoints()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-blue-500 transition">ค้นหา</button>
-            <div id="pts" class="text-5xl font-bold text-blue-600 mt-6">-</div>
+        <div class="max-w-xl mx-auto bg-white p-8 rounded-2xl shadow-md mt-10 border relative">
+            <div class="absolute top-4 right-4 text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold">
+                เป้าหมาย: <span id="display-target">5</span> แก้วฟรี 1
+            </div>
+            <h2 class="text-2xl font-bold mb-4 text-center">🎁 ระบบสะสมแต้มสมาชิก</h2>
+            <div class="flex gap-2 mb-6">
+                <input type="tel" id="fPhone" placeholder="กรอกเบอร์โทรศัพท์ลูกค้า" class="w-full p-3 border-2 rounded-xl text-center text-xl outline-none focus:border-blue-500">
+                <button onclick="searchPoints()" class="bg-blue-600 text-white px-6 rounded-xl font-bold text-lg hover:bg-blue-500 transition">ค้นหา</button>
+            </div>
+            
+            <div id="member-result" class="hidden flex-col items-center">
+                <div class="grid grid-cols-2 gap-4 w-full text-center mb-6">
+                    <div class="bg-gray-50 p-4 rounded-xl border">
+                        <p class="text-gray-500 text-sm">แต้มปัจจุบัน (รอแลก)</p>
+                        <p class="text-4xl font-bold text-blue-600" id="crm-pts">0</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-xl border">
+                        <p class="text-gray-500 text-sm">ซื้อมาแล้วทั้งหมดตลอดชีพ</p>
+                        <p class="text-4xl font-bold text-gray-700" id="crm-lifetime">0</p>
+                    </div>
+                </div>
+                <div id="reward-zone" class="w-full text-center">
+                    </div>
+            </div>
         </div>
     </div>
 
-    <div id="admin" class="tab-content hidden p-4 max-w-3xl mx-auto">
+    <div id="admin" class="tab-content hidden p-4 max-w-4xl mx-auto">
         <div class="bg-white p-6 rounded-2xl shadow-md border mb-6">
-            <h2 class="text-xl font-bold mb-4 text-red-600">➕ เพิ่มเมนูใหม่</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
-                <input type="text" id="newCat" placeholder="หมวดหมู่ (เช่น กาแฟ)" class="p-2 border rounded">
-                <input type="text" id="newName" placeholder="ชื่อสินค้า" class="p-2 border rounded md:col-span-2">
-                <input type="number" id="newPrice" placeholder="ราคา" class="p-2 border rounded">
+            <h2 class="text-xl font-bold mb-4 text-blue-800">⚙️ ตั้งค่าโปรโมชั่นสะสมแต้ม</h2>
+            <div class="flex items-center gap-4">
+                <label class="font-bold">กี่แก้ว ฟรี 1 แก้ว? :</label>
+                <input type="number" id="setting-target" class="border-2 p-2 rounded-lg w-24 text-center text-xl" min="1">
+                <button onclick="saveSettings()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-500">บันทึกการตั้งค่า</button>
             </div>
-            <button onclick="addNewMenu()" class="w-full bg-red-600 text-white py-2 rounded-lg mt-3 font-bold hover:bg-red-500">บันทึกเมนูใหม่</button>
         </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-md border mb-6">
+            <h2 class="text-xl font-bold mb-4 text-red-600" id="menu-form-title">➕ เพิ่มเมนูใหม่</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                <input type="hidden" id="edit-idx" value="-1">
+                <input type="text" id="newCat" placeholder="หมวดหมู่ (เช่น กาแฟ)" class="p-3 border-2 rounded-lg outline-none focus:border-blue-500">
+                <input type="text" id="newName" placeholder="ชื่อสินค้า" class="p-3 border-2 rounded-lg md:col-span-2 outline-none focus:border-blue-500">
+                <input type="number" id="newPrice" placeholder="ราคา" class="p-3 border-2 rounded-lg outline-none focus:border-blue-500">
+            </div>
+            <div class="flex gap-2 mt-3">
+                <button onclick="saveMenu()" id="btn-save-menu" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-500 text-lg">บันทึกข้อมูลเมนู</button>
+                <button onclick="cancelEdit()" id="btn-cancel-edit" class="hidden bg-gray-400 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-500">ยกเลิก</button>
+            </div>
+        </div>
+
         <div class="bg-white p-6 rounded-2xl shadow-md border">
-            <h2 class="text-xl font-bold mb-4">รายการเมนูทั้งหมดในระบบ</h2>
-            <div id="admin-menu-list" class="space-y-2"></div>
+            <h2 class="text-xl font-bold mb-4">📋 รายการเมนูทั้งหมด</h2>
+            <div id="admin-menu-list" class="space-y-2 max-h-96 overflow-y-auto pr-2"></div>
         </div>
     </div>
 
     <script>
-        // --- 1. การเชื่อมต่อ Firebase Firestore ---
+        // --- 1. เชื่อมต่อ Firebase ---
         const firebaseConfig = {
             apiKey: "AIzaSyCTZ9MqTirZkosidhpHgnlH4a5TR_XxhLA",
             authDomain: "two-mice-57341.firebaseapp.com",
@@ -101,60 +154,49 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // --- 2. ข้อมูลเมนูเริ่มต้น (ตามที่คุณสั่งเป๊ะๆ) ---
-        const initialMenus = [
-            { c: 'ทูโทน', n: 'ดาร์กวาเลท', p: 29 }, { c: 'ทูโทน', n: 'ดาร์กแมนดาริน', p: 29 }, { c: 'ทูโทน', n: 'ดาร์กคอฟฟี่', p: 29 }, { c: 'ทูโทน', n: 'ดาร์กบราว', p: 29 }, { c: 'ทูโทน', n: 'เขียวสตอ', p: 29 },
-            { c: 'กาแฟ', n: 'มอคคา', p: 20 }, { c: 'กาแฟ', n: 'คาปูชิโน', p: 20 }, { c: 'กาแฟ', n: 'ลาเต้', p: 20 },
-            { c: 'บราวชูการ์', n: 'ไต้หวันบราว', p: 20 }, { c: 'บราวชูการ์', n: 'ชาไทยบราว', p: 20 }, { c: 'บราวชูการ์', n: 'ชาเขียวบราว', p: 20 },
-            { c: 'ชาธรรมดา', n: 'ไต้หวัน', p: 20 }, { c: 'ชาธรรมดา', n: 'ชาเขียว', p: 20 }, { c: 'ชาธรรมดา', n: 'ชาไทย', p: 20 },
-            { c: 'นมสดผลไม้', n: 'เผือก', p: 20 }, { c: 'นมสดผลไม้', n: 'แคนตาลูป', p: 20 }, { c: 'นมสดผลไม้', n: 'กล้วยหอม', p: 20 }, { c: 'นมสดผลไม้', n: 'ข้าวโพด', p: 20 }, { c: 'นมสดผลไม้', n: 'สตอ', p: 20 }, { c: 'นมสดผลไม้', n: 'บลูเบอรี่', p: 20 }, { c: 'นมสดผลไม้', n: 'ส้มแมนดาริน', p: 20 }, { c: 'นมสดผลไม้', n: 'กีวี่', p: 20 }, { c: 'นมสดผลไม้', n: 'แอปเปิ้ล', p: 20 },
-            { c: 'นมสดธรรมดา', n: 'ชมพู', p: 20 }, { c: 'นมสดธรรมดา', n: 'นมสด', p: 20 }, { c: 'นมสดธรรมดา', n: 'นมสดบราว', p: 20 }, { c: 'นมสดธรรมดา', n: 'ดาร์กนมสด', p: 29 },
-            { c: 'ชาใส', n: 'เขียวสตอ', p: 20 }, { c: 'ชาใส', n: 'เขียวลิ้นจี่', p: 20 }, { c: 'ชาใส', n: 'เขียวบลู', p: 20 }, { c: 'ชาใส', n: 'เขียวแอป', p: 20 }, { c: 'ชาใส', n: 'เขียวส้ม', p: 20 }, { c: 'ชาใส', n: 'เขียวน้ำผึ้ง', p: 20 },
-            { c: 'โซดา', n: 'สตอ', p: 20 }, { c: 'โซดา', n: 'บลูเบอร์', p: 20 }, { c: 'โซดา', n: 'บลูฮา', p: 20 }, { c: 'โซดา', n: 'แดง', p: 20 }, { c: 'โซดา', n: 'ส้ม', p: 20 }, { c: 'โซดา', n: 'ลิ้นจี่', p: 20 }, { c: 'โซดา', n: 'แอป', p: 20 }, { c: 'โซดา', n: 'กีวี่', p: 20 }, { c: 'โซดา', n: 'น้ำผึ้ง', p: 20 },
-            { c: 'น้ำอัดลม', n: 'โค้ก', p: 25 }, { c: 'น้ำอัดลม', n: 'โค้กซี', p: 25 }, { c: 'น้ำอัดลม', n: 'สไปร์ท', p: 25 }, { c: 'น้ำอัดลม', n: 'เขียว', p: 25 }, { c: 'น้ำอัดลม', n: 'แดง', p: 25 }, { c: 'น้ำอัดลม', n: 'ฟ้า', p: 25 }, { c: 'น้ำอัดลม', n: 'ม่วง', p: 25 },
-            { c: 'ท้อปปิ้ง', n: 'ไข่มุก', p: 0 }
-        ];
-
+        // --- ตัวแปร Global ---
         let menuList = [];
         let cart = [];
-        let salesHistory = []; // ไว้เก็บข้อมูลทำ Excel
+        let allSales = []; // เก็บยอดขายทั้งหมดที่ดึงมา
+        let rewardTarget = 5; // ค่าเริ่มต้น 5 แถม 1
+        let myChart = null; // เก็บ instance ของกราฟ
 
-        // โหลดเมนูจาก Firestore (ถ้าเพิ่งเปิดครั้งแรก จะยัดค่าเริ่มต้นให้)
-        async function loadMenu() {
-            const docRef = db.collection("settings").doc("menuData");
-            const doc = await docRef.get();
-            if (doc.exists) {
-                menuList = doc.data().items;
+        // --- 2. โหลดข้อมูลเริ่มต้น (ตั้งค่า & เมนู) ---
+        async function loadInitialData() {
+            // โหลดตั้งค่าโปรโมชั่น
+            const setDoc = await db.collection("settings").doc("system").get();
+            if (setDoc.exists && setDoc.data().rewardTarget) {
+                rewardTarget = setDoc.data().rewardTarget;
             } else {
-                await docRef.set({ items: initialMenus });
-                menuList = initialMenus;
+                await db.collection("settings").doc("system").set({ rewardTarget: 5 });
+            }
+            document.getElementById('setting-target').value = rewardTarget;
+            document.getElementById('display-target').innerText = rewardTarget;
+
+            // โหลดเมนู
+            const menuDoc = await db.collection("settings").doc("menuData").get();
+            if (menuDoc.exists) {
+                menuList = menuDoc.data().items;
             }
             renderMenu();
             renderAdminMenu();
+            fetchSales(); // โหลดข้อมูลยอดขาย
         }
 
-        // แสดงหมวดหมู่และเมนูในหน้า POS
+        // --- 3. จัดการเมนู (หน้าร้าน) ---
         function renderMenu() {
             const container = document.getElementById('menu-container');
             container.innerHTML = '';
-            
-            // ดึงหมวดหมู่ทั้งหมดออกมาโดยไม่ซ้ำกัน (เรียงท้อปปิ้งไว้ท้ายสุด)
             const categories = [...new Set(menuList.map(m => m.c))];
-            if(categories.includes('ท้อปปิ้ง')) {
-                categories.push(categories.splice(categories.indexOf('ท้อปปิ้ง'), 1)[0]);
-            }
+            if(categories.includes('ท้อปปิ้ง')) categories.push(categories.splice(categories.indexOf('ท้อปปิ้ง'), 1)[0]);
 
             categories.forEach(cat => {
-                const itemsInCat = menuList.filter(m => m.c === cat);
-                let html = `
-                <div class="mb-6">
-                    <h3 class="font-bold text-xl mb-3 text-gray-700 border-b-2 pb-1 border-blue-200 pl-2 border-l-4 border-l-blue-500">${cat}</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">`;
-                
-                itemsInCat.forEach((m, idx) => {
-                    const globalIdx = menuList.findIndex(x => x.n === m.n && x.c === m.c);
+                const items = menuList.filter(m => m.c === cat);
+                let html = `<div class="mb-6"><h3 class="font-bold text-xl mb-3 text-gray-700 border-l-4 border-blue-600 pl-2">${cat}</h3><div class="grid grid-cols-2 md:grid-cols-4 gap-3">`;
+                items.forEach(m => {
+                    const idx = menuList.findIndex(x => x.n === m.n && x.c === m.c);
                     html += `
-                        <div onclick="addCart(${globalIdx})" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-400 active:scale-95 transition-all cursor-pointer flex flex-col justify-between h-full">
+                        <div onclick="addCart(${idx})" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-blue-400 active:scale-95 transition-all cursor-pointer flex flex-col justify-between">
                             <p class="font-bold text-sm text-gray-800">${m.n}</p>
                             <p class="text-blue-600 font-bold text-lg mt-1 text-right">${m.p}.-</p>
                         </div>`;
@@ -164,216 +206,341 @@
             });
         }
 
-        // --- 3. ระบบตะกร้าสินค้า ---
-        function addCart(idx) { 
-            cart.push({...menuList[idx], cartId: Date.now() + Math.random()}); 
-            updateCartUI(); 
-        }
-        
-        function removeCart(cartId) { 
-            cart = cart.filter(item => item.cartId !== cartId); 
-            updateCartUI(); 
-        }
-
-        function clearCart() {
-            cart = []; updateCartUI();
-        }
-
+        // --- 4. ตะกร้าสินค้าและคิดเงิน ---
+        function addCart(idx) { cart.push({...menuList[idx], cartId: Date.now()+Math.random()}); updateCartUI(); }
+        function removeCart(id) { cart = cart.filter(i => i.cartId !== id); updateCartUI(); }
+        function clearCart() { cart = []; updateCartUI(); }
         function updateCartUI() {
             const area = document.getElementById('cart');
             let t = 0; area.innerHTML = '';
             cart.forEach(it => { 
                 t += it.p; 
-                area.innerHTML += `
-                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
-                    <span class="text-sm font-bold text-gray-700">${it.n}</span>
-                    <div class="flex items-center">
-                        <b class="mr-3 text-blue-700">${it.p}.-</b>
-                        <button onclick="removeCart(${it.cartId})" class="bg-red-100 text-red-600 w-6 h-6 rounded-full flex items-center justify-center font-bold hover:bg-red-200">✕</button>
-                    </div>
-                </div>`; 
+                area.innerHTML += `<div class="flex justify-between items-center bg-gray-50 p-2 rounded border"><span class="text-sm font-bold">${it.n}</span><div class="flex items-center"><b class="mr-2 text-blue-700">${it.p}.-</b><button onclick="removeCart(${it.cartId})" class="text-red-500 font-bold w-6 h-6 bg-red-100 rounded-full">✕</button></div></div>`; 
             });
             document.getElementById('total').innerText = t;
         }
 
-        // --- 4. กดยืนยันการขาย ---
         async function checkout() {
-            if(!cart.length) return alert('กรุณาเลือกเมนูก่อนครับ');
+            if(!cart.length) return alert('เลือกเมนูก่อนครับ');
             const btn = document.getElementById('btn-sell');
             btn.disabled = true; btn.innerText = "กำลังบันทึก...";
             
             try {
-                let ph = document.getElementById('custPhone').value.trim();
-                if (!ph) ph = 'ทั่วไป'; // ถ้าไม่ใส่เบอร์ ให้เป็นลูกค้าทั่วไป
-                
-                // นับจำนวนแก้ว (เมนูราคา 0 บาท เช่น ไข่มุก จะไม่ถูกนับเป็น 1 แก้ว)
-                const cupsCount = cart.filter(i => i.p > 0).length;
+                let ph = document.getElementById('custPhone').value.trim() || 'ทั่วไป';
+                const cupsCount = cart.filter(i => i.p > 0).length; // ราคา 0 (เช่นไข่มุก) ไม่นับเป็นแก้ว
                 const totalBaht = parseInt(document.getElementById('total').innerText);
                 
-                // บันทึกลงตารางยอดขาย
+                // บันทึกบิล
                 await db.collection("sales").add({
                     time: firebase.firestore.FieldValue.serverTimestamp(),
-                    items: cart,
-                    total: totalBaht,
-                    cups: cupsCount,
-                    phone: ph
+                    items: cart, total: totalBaht, cups: cupsCount, phone: ph
                 });
 
-                // อัปเดตแต้ม (เฉพาะคนที่มีเบอร์)
+                // อัปเดตแต้มสมาชิก
                 if(ph !== 'ทั่วไป' && cupsCount > 0) {
                     const memRef = db.collection("members").doc(ph);
                     await db.runTransaction(async (t) => {
                         const doc = await t.get(memRef);
-                        const newPoints = (doc.exists ? doc.data().points : 0) + cupsCount;
-                        t.set(memRef, { points: newPoints }, { merge: true });
+                        const data = doc.exists ? doc.data() : { points: 0, lifetime_cups: 0 };
+                        t.set(memRef, { 
+                            points: (data.points || 0) + cupsCount,
+                            lifetime_cups: (data.lifetime_cups || 0) + cupsCount 
+                        }, { merge: true });
                     });
                 }
 
-                alert('✅ บันทึกยอดขายสำเร็จ!');
-                clearCart(); 
-                document.getElementById('custPhone').value = '';
-            } catch (e) {
-                alert('เกิดข้อผิดพลาด: ' + e.message);
-            }
+                alert('✅ ขายสำเร็จ!');
+                clearCart(); document.getElementById('custPhone').value = '';
+            } catch (e) { alert('Error: ' + e.message); }
             btn.disabled = false; btn.innerText = "💸 ยืนยันการขาย";
         }
 
-        // --- 5. โหลดประวัติและลบข้อมูล (Dashboard) ---
-        db.collection("sales").orderBy("time", "desc").limit(100).onSnapshot(snap => {
-            salesHistory = []; // รีเซ็ตข้อมูลที่จะใช้ทำ Excel
-            const l = document.getElementById('log');
-            let sumM = 0, sumC = 0;
-            l.innerHTML = '';
+        // --- 5. ดึงข้อมูลยอดขาย & จัดการเวลา (GMT+7) ---
+        function fetchSales() {
+            // ดึงข้อมูลง่ายๆ 1000 รายการล่าสุด
+            db.collection("sales").orderBy("time", "desc").limit(1000).onSnapshot(snap => {
+                allSales = [];
+                snap.forEach(doc => {
+                    let s = doc.data();
+                    if(s.time) {
+                        // สร้าง Date object (Firestore แปลงเป็นเวลาเครื่องให้แล้ว ซึ่งถ้าอยู่ไทยคือ GMT+7)
+                        s.dateObj = s.time.toDate(); 
+                        allSales.push({ id: doc.id, ...s });
+                    }
+                });
+                applyFilter(); // กรองและอัปเดตกราฟทันที
+            });
+        }
+
+        function applyFilter() {
+            const filter = document.getElementById('timeFilter').value;
+            const now = new Date();
+            let start, end;
             
-            snap.forEach(doc => {
-                const s = doc.data();
-                const id = doc.id;
-                salesHistory.push({id, ...s}); // เก็บลง Array
-                
-                sumM += s.total || 0;
-                sumC += s.cups || 0;
-                
-                let timeStr = "กำลังประมวลผล";
-                if(s.time) {
-                    const d = s.time.toDate();
-                    timeStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-                }
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            if(filter === 'today') {
+                start = startOfToday;
+                end = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
+            } else if(filter === 'yesterday') {
+                start = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
+                end = startOfToday;
+            } else if(filter === 'thisWeek') {
+                const day = now.getDay() || 7; // ให้วันอาทิตย์คือ 7
+                start = new Date(startOfToday.getTime() - (day - 1) * 24 * 60 * 60 * 1000);
+                end = now;
+            } else if(filter === 'lastWeek') {
+                const day = now.getDay() || 7;
+                end = new Date(startOfToday.getTime() - (day - 1) * 24 * 60 * 60 * 1000);
+                start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
+            } else if(filter === 'thisMonth') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+                end = now;
+            } else if(filter === 'lastMonth') {
+                start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                end = new Date(now.getFullYear(), now.getMonth(), 1);
+            } else {
+                start = new Date(2000,0,1); end = new Date(2100,0,1); // all
+            }
+
+            // กรองข้อมูลตามเวลา
+            const filteredSales = allSales.filter(s => s.dateObj >= start && s.dateObj < end);
+            renderDashboard(filteredSales);
+            updateChart(filteredSales);
+        }
+
+        function renderDashboard(data) {
+            const l = document.getElementById('log');
+            let sumM = 0, sumC = 0; l.innerHTML = '';
+            
+            data.forEach(s => {
+                sumM += s.total || 0; sumC += s.cups || 0;
+                // ฟอร์แมตเวลาไทย
+                let timeStr = s.dateObj.toLocaleString('th-TH', { 
+                    year: '2-digit', month: 'short', day: 'numeric', 
+                    hour: '2-digit', minute: '2-digit' 
+                });
 
                 l.innerHTML += `
                 <tr class="border-b hover:bg-gray-50">
-                    <td class="p-3 text-xs text-gray-500">${timeStr}</td>
+                    <td class="p-3 text-sm text-gray-600">${timeStr}</td>
                     <td class="p-3 text-sm">${s.items.map(i=>i.n).join(', ')}</td>
-                    <td class="p-3 text-sm text-gray-600">${s.phone}</td>
+                    <td class="p-3 text-sm">${s.phone}</td>
                     <td class="p-3 font-bold text-right text-green-600">${s.total}</td>
-                    <td class="p-3 text-center"><button onclick="deleteSale('${id}', '${s.phone}', ${s.cups})" class="text-red-500 hover:text-red-700 bg-red-50 px-2 py-1 rounded">🗑️ ลบ</button></td>
+                    <td class="p-3 text-center"><button onclick="deleteSale('${s.id}', '${s.phone}', ${s.cups})" class="text-red-500 bg-red-50 px-2 py-1 rounded text-xs">🗑 ลบ</button></td>
                 </tr>`;
             });
-            document.getElementById('sum-m').innerText = sumM;
-            document.getElementById('sum-c').innerText = sumC;
-        });
-
-        // ฟังก์ชันลบรายการขายและดึงแต้มคืน
-        async function deleteSale(id, phone, cups) {
-            if(!confirm("⚠️ คุณแน่ใจหรือไม่ว่าจะลบรายการนี้? (ระบบจะหักเงินออก และหักแต้มลูกค้าคืน)")) return;
-            try {
-                await db.collection("sales").doc(id).delete();
-                // หักแต้มคืน
-                if(phone && phone !== 'ทั่วไป' && cups > 0) {
-                    const memRef = db.collection("members").doc(phone);
-                    await db.runTransaction(async t => {
-                        const doc = await t.get(memRef);
-                        if(doc.exists) {
-                            let pts = doc.data().points - cups;
-                            t.set(memRef, {points: pts < 0 ? 0 : pts}, {merge: true});
-                        }
-                    });
-                }
-                alert("ลบรายการสำเร็จ");
-            } catch(e) { alert("ลบไม่สำเร็จ: " + e.message); }
+            document.getElementById('sum-m').innerText = sumM.toLocaleString();
+            document.getElementById('sum-c').innerText = sumC.toLocaleString();
         }
 
-        // --- 6. ส่งออกเป็น Excel (CSV) ---
-        function exportExcel() {
-            if(salesHistory.length === 0) return alert('ไม่มีข้อมูลยอดขายให้โหลดครับ');
+        // --- 6. สร้างกราฟเส้น (Chart.js) ---
+        function updateChart(data) {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            // สร้าง Array 24 ช่องเก็บจำนวนแก้วแต่ละชั่วโมง (00:00 - 23:59)
+            let hourlyCups = Array(24).fill(0);
             
-            // ใส่ BOM ให้ Excel อ่านภาษาไทยออก
-            let csvContent = '\uFEFF'; 
-            csvContent += "วันที่-เวลา,รายการสินค้า,เบอร์ลูกค้า,จำนวนแก้ว,ยอดเงิน(บาท)\n";
-            
-            salesHistory.forEach(s => {
-                let t = s.time ? s.time.toDate().toLocaleString('th-TH') : 'N/A';
-                let itemsStr = s.items.map(i => i.n).join(' + ');
-                csvContent += `${t},"${itemsStr}",${s.phone},${s.cups},${s.total}\n`;
+            data.forEach(s => {
+                const h = s.dateObj.getHours();
+                hourlyCups[h] += (s.cups || 0);
             });
 
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `สรุปยอดขาย_TwoMice.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            if(myChart) myChart.destroy(); // ลบกราฟเก่าก่อนวาดใหม่
+
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [{
+                        label: 'จำนวนแก้วที่ขายได้',
+                        data: hourlyCups,
+                        borderColor: 'rgba(59, 130, 246, 1)', // สีฟ้า Blue-500
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderWidth: 2,
+                        tension: 0.3, // ทำให้เส้นโค้งสมูท
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
         }
 
-        // --- 7. จัดการเมนูหลังร้าน ---
+        // ลบข้อมูลการขาย
+        async function deleteSale(id, phone, cups) {
+            if(!confirm("ลบรายการนี้ (หักเงินและแต้มคืน)?")) return;
+            await db.collection("sales").doc(id).delete();
+            if(phone && phone !== 'ทั่วไป' && cups > 0) {
+                const memRef = db.collection("members").doc(phone);
+                await db.runTransaction(async t => {
+                    const doc = await t.get(memRef);
+                    if(doc.exists) {
+                        let pts = doc.data().points - cups;
+                        let lf = doc.data().lifetime_cups - cups;
+                        t.set(memRef, { points: pts<0?0:pts, lifetime_cups: lf<0?0:lf }, {merge:true});
+                    }
+                });
+            }
+        }
+
+        // ส่งออก Excel
+        function exportExcel() {
+            if(allSales.length === 0) return alert('ไม่มีข้อมูล');
+            let csv = '\uFEFFวันที่,เวลา,รายการ,เบอร์,จำนวนแก้ว,ยอดเงิน\n';
+            allSales.forEach(s => {
+                let d = s.dateObj;
+                let dt = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+                let tm = `${d.getHours()}:${d.getMinutes()}`;
+                csv += `${dt},${tm},"${s.items.map(i=>i.n).join('+')}",${s.phone},${s.cups},${s.total}\n`;
+            });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+            link.download = "ยอดขาย_TwoMice.csv";
+            link.click();
+        }
+
+        // --- 7. ระบบสมาชิก (แลกแต้ม) ---
+        async function searchPoints() {
+            const p = document.getElementById('fPhone').value.trim();
+            if(!p) return;
+            const doc = await db.collection("members").doc(p).get();
+            const resArea = document.getElementById('member-result');
+            const rwZone = document.getElementById('reward-zone');
+            
+            resArea.classList.remove('hidden');
+            resArea.classList.add('flex');
+
+            if (doc.exists) {
+                const pts = doc.data().points || 0;
+                const lf = doc.data().lifetime_cups || 0;
+                document.getElementById('crm-pts').innerText = pts;
+                document.getElementById('crm-lifetime').innerText = lf;
+
+                // เช็คสิทธิ์แลกฟรี
+                if(pts >= rewardTarget) {
+                    rwZone.innerHTML = `
+                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl mb-4">
+                        🎉 ลูกค้ามีสิทธิ์รับฟรี 1 แก้ว! (ใช้ ${rewardTarget} แต้ม)
+                    </div>
+                    <button onclick="claimReward('${p}')" class="bg-green-600 text-white px-8 py-3 rounded-xl font-bold text-xl hover:bg-green-500 shadow-lg active:scale-95 transition-all">🎁 กดรับสิทธิ์ฟรี 1 แก้ว</button>`;
+                } else {
+                    rwZone.innerHTML = `<p class="text-gray-500 font-bold">ขาดอีก ${rewardTarget - pts} แต้ม จึงจะแลกฟรีได้</p>`;
+                }
+            } else {
+                document.getElementById('crm-pts').innerText = "0";
+                document.getElementById('crm-lifetime').innerText = "0";
+                rwZone.innerHTML = `<p class="text-red-500 font-bold">ไม่พบประวัติลูกค้านี้ (เริ่มนับแต้มเมื่อซื้อครั้งแรก)</p>`;
+            }
+        }
+
+        async function claimReward(phone) {
+            if(!confirm(`หักแต้มลูกค้า ${rewardTarget} แต้ม เพื่อแลกรับสิทธิ์ฟรีใช่หรือไม่?`)) return;
+            const memRef = db.collection("members").doc(phone);
+            await db.runTransaction(async t => {
+                const doc = await t.get(memRef);
+                const currentPts = doc.data().points;
+                t.update(memRef, { points: currentPts - rewardTarget });
+            });
+            alert('✅ ใช้สิทธิ์สำเร็จ! หักแต้มเรียบร้อยแล้ว');
+            searchPoints(); // รีเฟรชหน้าจอแต้มใหม่
+        }
+
+        // --- 8. จัดการหลังร้าน (แก้ไขเมนู & ตั้งค่า) ---
+        async function saveSettings() {
+            const val = parseInt(document.getElementById('setting-target').value);
+            if(val > 0) {
+                rewardTarget = val;
+                await db.collection("settings").doc("system").set({ rewardTarget: val }, {merge:true});
+                document.getElementById('display-target').innerText = val;
+                alert('บันทึกการตั้งค่าโปรโมชั่นแล้ว');
+            }
+        }
+
         function renderAdminMenu() {
             const list = document.getElementById('admin-menu-list');
             list.innerHTML = '';
             menuList.forEach((m, i) => {
                 list.innerHTML += `
-                <div class="flex justify-between items-center border-b p-2 bg-gray-50 rounded">
-                    <div>
-                        <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-2">${m.c}</span>
-                        <span class="font-bold">${m.n}</span>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <span class="text-green-600 font-bold">${m.p}.-</span>
-                        <button onclick="deleteMenuAdmin(${i})" class="text-red-500 hover:bg-red-100 px-2 py-1 rounded text-sm">ลบทิ้ง</button>
+                <div class="flex justify-between items-center border-b p-3 bg-gray-50 rounded mb-2">
+                    <div><span class="bg-blue-200 text-blue-900 text-xs px-2 py-1 rounded font-bold mr-2">${m.c}</span><span class="font-bold text-lg">${m.n}</span></div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-green-600 font-bold text-lg w-12 text-right">${m.p}.-</span>
+                        <button onclick="editMenu(${i})" class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded text-sm font-bold hover:bg-yellow-200">✏️ แก้ไข</button>
+                        <button onclick="deleteMenuAdmin(${i})" class="bg-red-100 text-red-600 px-3 py-1 rounded text-sm font-bold hover:bg-red-200">🗑 ลบ</button>
                     </div>
                 </div>`;
             });
         }
 
-        async function addNewMenu() {
-            const c = document.getElementById('newCat').value.trim();
-            const n = document.getElementById('newName').value.trim();
-            const p = parseInt(document.getElementById('newPrice').value);
-            if(!c || !n || isNaN(p)) return alert('กรอกข้อมูลให้ครบและราคาต้องเป็นตัวเลขครับ');
+        // ฟังก์ชันเริ่มแก้ไขเมนู
+        function editMenu(idx) {
+            const m = menuList[idx];
+            document.getElementById('edit-idx').value = idx;
+            document.getElementById('newCat').value = m.c;
+            document.getElementById('newName').value = m.n;
+            document.getElementById('newPrice').value = m.p;
             
-            menuList.push({c, n, p});
-            await db.collection("settings").doc("menuData").set({items: menuList});
-            
+            document.getElementById('menu-form-title').innerHTML = "✏️ แก้ไขข้อมูลเมนู";
+            document.getElementById('menu-form-title').classList.replace('text-red-600', 'text-yellow-600');
+            document.getElementById('btn-save-menu').innerText = "บันทึกการแก้ไข";
+            document.getElementById('btn-save-menu').classList.replace('bg-red-600', 'bg-yellow-500');
+            document.getElementById('btn-save-menu').classList.replace('hover:bg-red-500', 'hover:bg-yellow-400');
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+            window.scrollTo(0, 0); // เลื่อนจอขึ้นบนสุดให้พิมพ์ง่าย
+        }
+
+        function cancelEdit() {
+            document.getElementById('edit-idx').value = -1;
             document.getElementById('newCat').value = '';
             document.getElementById('newName').value = '';
             document.getElementById('newPrice').value = '';
-            alert('เพิ่มเมนูสำเร็จ');
-            renderMenu(); renderAdminMenu();
+            
+            document.getElementById('menu-form-title').innerHTML = "➕ เพิ่มเมนูใหม่";
+            document.getElementById('menu-form-title').classList.replace('text-yellow-600', 'text-red-600');
+            document.getElementById('btn-save-menu').innerText = "บันทึกข้อมูลเมนู";
+            document.getElementById('btn-save-menu').classList.replace('bg-yellow-500', 'bg-red-600');
+            document.getElementById('btn-save-menu').classList.replace('hover:bg-yellow-400', 'hover:bg-red-500');
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+        }
+
+        async function saveMenu() {
+            const c = document.getElementById('newCat').value.trim();
+            const n = document.getElementById('newName').value.trim();
+            const p = parseInt(document.getElementById('newPrice').value);
+            const idx = parseInt(document.getElementById('edit-idx').value);
+
+            if(!c || !n || isNaN(p)) return alert('กรอกข้อมูลให้ครบและราคาต้องเป็นตัวเลขครับ');
+            
+            if(idx === -1) {
+                // เพิ่มใหม่
+                menuList.push({c, n, p});
+            } else {
+                // แก้ไขของเดิม
+                menuList[idx] = {c, n, p};
+            }
+
+            await db.collection("settings").doc("menuData").set({items: menuList});
+            alert('บันทึกเมนูสำเร็จ!');
+            cancelEdit(); renderMenu(); renderAdminMenu();
         }
 
         async function deleteMenuAdmin(idx) {
-            if(!confirm("ต้องการลบเมนูนี้ออกจากระบบใช่หรือไม่?")) return;
+            if(!confirm("ต้องการลบเมนูนี้ทิ้งถาวรใช่หรือไม่?")) return;
             menuList.splice(idx, 1);
             await db.collection("settings").doc("menuData").set({items: menuList});
             renderMenu(); renderAdminMenu();
         }
 
-        // --- ระบบสลับแท็บและอื่นๆ ---
-        function searchPoints() {
-            const p = document.getElementById('fPhone').value.trim();
-            if(!p) return;
-            db.collection("members").doc(p).get().then(doc => {
-                document.getElementById('pts').innerText = doc.exists ? doc.data().points + " แต้ม" : "0 แต้ม";
-            });
-        }
-
         function showTab(t) {
             document.querySelectorAll('.tab-content').forEach(e => e.classList.add('hidden'));
             document.getElementById(t).classList.remove('hidden');
+            if(t === 'dash') applyFilter(); // ถ้าเปิดหน้ากราฟ ให้วาดยอดขายอัปเดตใหม่
         }
 
-        // เริ่มต้นการทำงานเมื่อโหลดเว็บ
-        loadMenu();
+        loadInitialData();
     </script>
 </body>
 </html>
