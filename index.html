@@ -80,25 +80,35 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500 text-center flex flex-col justify-center">
-                    <p class="text-gray-500 text-sm">ยอดรวมทั้งร้าน</p>
-                    <p class="text-2xl font-bold text-green-600"><span id="sum-m">0</span> ฿</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500 flex flex-col justify-center">
+                    <p class="text-gray-500 text-sm font-bold text-center">ยอดรวมทั้งร้าน</p>
+                    <p class="text-3xl font-bold text-green-600 text-center my-2"><span id="sum-m">0</span> ฿</p>
+                    <div class="flex justify-between mt-auto text-sm bg-green-50 p-2 rounded-lg">
+                        <span class="text-gray-700">เงินสด: <b id="sum-cash" class="text-green-700">0</b> ฿</span>
+                        <span class="text-gray-700">โอน: <b id="sum-transfer" class="text-blue-700">0</b> ฿</span>
+                    </div>
                 </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500 text-center">
-                    <p class="text-gray-500 text-sm">เครื่องดื่ม</p>
-                    <p class="text-xl font-bold text-blue-600"><span id="sum-d-m">0</span> ฿</p>
-                    <p class="text-xs text-gray-400 mt-1"><span id="sum-d-c">0</span> แก้ว</p>
+                
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500 flex flex-col justify-center">
+                    <p class="text-gray-500 text-sm font-bold text-center">🥤 เครื่องดื่ม (<span id="sum-d-c">0</span> แก้ว)</p>
+                    <p class="text-2xl font-bold text-blue-600 text-center my-2"><span id="sum-d-m">0</span> ฿</p>
+                    <div class="flex justify-between mt-auto text-sm bg-blue-50 p-2 rounded-lg">
+                        <span class="text-gray-700">เงินสด: <b id="sum-d-cash" class="text-green-600">0</b> ฿</span>
+                        <span class="text-gray-700">โอน: <b id="sum-d-trans" class="text-blue-600">0</b> ฿</span>
+                    </div>
                 </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500 text-center">
-                    <p class="text-gray-500 text-sm">อาหาร</p>
-                    <p class="text-xl font-bold text-orange-600"><span id="sum-f-m">0</span> ฿</p>
-                    <p class="text-xs text-gray-400 mt-1"><span id="sum-f-c">0</span> จาน</p>
+
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500 flex flex-col justify-center">
+                    <p class="text-gray-500 text-sm font-bold text-center">🍔 อาหาร (<span id="sum-f-c">0</span> จาน)</p>
+                    <p class="text-2xl font-bold text-orange-600 text-center my-2"><span id="sum-f-m">0</span> ฿</p>
+                    <div class="flex justify-between mt-auto text-sm bg-orange-50 p-2 rounded-lg">
+                        <span class="text-gray-700">เงินสด: <b id="sum-f-cash" class="text-green-600">0</b> ฿</span>
+                        <span class="text-gray-700">โอน: <b id="sum-f-trans" class="text-blue-600">0</b> ฿</span>
+                    </div>
                 </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-gray-500 text-center flex flex-col justify-center">
-                    <p class="text-gray-600 text-sm">สด: <span id="sum-cash" class="text-green-600 font-bold">0</span> ฿</p>
-                    <p class="text-gray-600 text-sm mt-1">โอน: <span id="sum-transfer" class="text-blue-600 font-bold">0</span> ฿</p>
-                </div>
+
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -471,13 +481,17 @@
 
         function renderDash(data) {
             const l = document.getElementById('log'); l.innerHTML = '';
+            
+            // ตัวแปรสะสมยอดแยกตามประเภทและวิธีการจ่าย
             let sumM = 0, sumCash = 0, sumTrans = 0; 
-            let sumDrinkM = 0, sumDrinkC = 0, sumFoodM = 0, sumFoodC = 0;
+            let sumDrinkM = 0, sumDrinkC = 0, sumDrinkCash = 0, sumDrinkTrans = 0;
+            let sumFoodM = 0, sumFoodC = 0, sumFoodCash = 0, sumFoodTrans = 0;
             let itemCounts = {}; 
 
             data.forEach(s => {
+                let isCash = (s.method === 'เงินสด');
                 sumM += s.total;
-                if(s.method === 'เงินสด') sumCash += s.total; else sumTrans += s.total;
+                if(isCash) sumCash += s.total; else sumTrans += s.total;
                 
                 // สำหรับข้อมูลเก่าที่ยังไม่มีการแยกประเภท
                 let cCups = s.cups || 0, cPlates = s.plates || 0, cDrinkM = s.drinkTotal || 0, cFoodM = s.foodTotal || 0;
@@ -486,8 +500,18 @@
                         if(i.type === 'food') { cPlates++; cFoodM += i.p; } else { cCups++; cDrinkM += i.p; }
                     });
                 }
+                
                 sumDrinkC += cCups; sumFoodC += cPlates;
                 sumDrinkM += cDrinkM; sumFoodM += cFoodM;
+                
+                // แยกเงินสด/โอนของน้ำและอาหาร
+                if(isCash) {
+                    sumDrinkCash += cDrinkM;
+                    sumFoodCash += cFoodM;
+                } else {
+                    sumDrinkTrans += cDrinkM;
+                    sumFoodTrans += cFoodM;
+                }
 
                 s.items.forEach(i => { itemCounts[i.n] = (itemCounts[i.n]||0) + 1; });
                 let tStr = s.dateObj.toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -495,10 +519,20 @@
                 l.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-2 text-xs text-gray-500">${tStr}</td><td class="p-2 text-sm">${itemsTxt}</td><td class="p-2 text-xs">${s.phone}</td><td class="p-2 text-xs text-gray-500">${s.seller}</td><td class="p-2 text-xs ${s.method==='เงินสด'?'text-yellow-600':'text-purple-600'}">${s.method}</td><td class="p-2 font-bold text-right text-green-600">${s.total}</td><td class="p-2 text-center"><button onclick="reqDeleteSale('${s.id}')" class="text-red-500 bg-red-50 px-2 py-1 rounded text-xs">ลบ</button></td></tr>`;
             });
             
+            // แสดงผลใน UI
             document.getElementById('sum-m').innerText = sumM.toLocaleString(); 
-            document.getElementById('sum-d-m').innerText = sumDrinkM.toLocaleString(); document.getElementById('sum-d-c').innerText = sumDrinkC.toLocaleString();
-            document.getElementById('sum-f-m').innerText = sumFoodM.toLocaleString(); document.getElementById('sum-f-c').innerText = sumFoodC.toLocaleString();
-            document.getElementById('sum-cash').innerText = sumCash.toLocaleString(); document.getElementById('sum-transfer').innerText = sumTrans.toLocaleString();
+            document.getElementById('sum-cash').innerText = sumCash.toLocaleString(); 
+            document.getElementById('sum-transfer').innerText = sumTrans.toLocaleString();
+            
+            document.getElementById('sum-d-m').innerText = sumDrinkM.toLocaleString(); 
+            document.getElementById('sum-d-c').innerText = sumDrinkC.toLocaleString();
+            document.getElementById('sum-d-cash').innerText = sumDrinkCash.toLocaleString();
+            document.getElementById('sum-d-trans').innerText = sumDrinkTrans.toLocaleString();
+            
+            document.getElementById('sum-f-m').innerText = sumFoodM.toLocaleString(); 
+            document.getElementById('sum-f-c').innerText = sumFoodC.toLocaleString();
+            document.getElementById('sum-f-cash').innerText = sumFoodCash.toLocaleString();
+            document.getElementById('sum-f-trans').innerText = sumFoodTrans.toLocaleString();
 
             let topArr = Object.entries(itemCounts).sort((a,b) => b[1] - a[1]).slice(0,5);
             document.getElementById('top5-list').innerHTML = topArr.map((v,i) => `<li>${i+1}. ${v[0]} <span class="float-right font-bold text-gray-500">${v[1]} รายการ</span></li>`).join('');
