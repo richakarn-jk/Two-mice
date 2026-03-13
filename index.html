@@ -33,8 +33,7 @@
                 <h1 class="font-bold text-xl inline-block mr-4">Two Mice POS</h1>
                 <span class="text-sm bg-blue-900 px-2 py-1 rounded-lg">👤 <span id="current-user-name"></span></span>
             </div>
-            <div class="flex space-x-2 text-sm overflow-x-auto hide-scroll pb-1" id="nav-buttons">
-                </div>
+            <div class="flex space-x-2 text-sm overflow-x-auto hide-scroll pb-1" id="nav-buttons"></div>
             <button onclick="logout()" class="text-red-300 text-sm font-bold hover:text-red-100 underline">ออกจากระบบ</button>
         </nav>
 
@@ -82,23 +81,29 @@
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500 text-center">
-                    <p class="text-gray-500 text-sm">ยอดเงินรวม</p><p class="text-2xl font-bold text-green-600"><span id="sum-m">0</span> ฿</p>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500 text-center flex flex-col justify-center">
+                    <p class="text-gray-500 text-sm">ยอดรวมทั้งร้าน</p>
+                    <p class="text-2xl font-bold text-green-600"><span id="sum-m">0</span> ฿</p>
                 </div>
                 <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500 text-center">
-                    <p class="text-gray-500 text-sm">แก้ว/จานรวม</p><p class="text-2xl font-bold text-blue-600"><span id="sum-c">0</span></p>
+                    <p class="text-gray-500 text-sm">เครื่องดื่ม</p>
+                    <p class="text-xl font-bold text-blue-600"><span id="sum-d-m">0</span> ฿</p>
+                    <p class="text-xs text-gray-400 mt-1"><span id="sum-d-c">0</span> แก้ว</p>
                 </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-yellow-500 text-center">
-                    <p class="text-gray-500 text-sm">เงินสด</p><p class="text-2xl font-bold text-yellow-600"><span id="sum-cash">0</span> ฿</p>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500 text-center">
+                    <p class="text-gray-500 text-sm">อาหาร</p>
+                    <p class="text-xl font-bold text-orange-600"><span id="sum-f-m">0</span> ฿</p>
+                    <p class="text-xs text-gray-400 mt-1"><span id="sum-f-c">0</span> จาน</p>
                 </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-purple-500 text-center">
-                    <p class="text-gray-500 text-sm">เงินโอน</p><p class="text-2xl font-bold text-purple-600"><span id="sum-transfer">0</span> ฿</p>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-gray-500 text-center flex flex-col justify-center">
+                    <p class="text-gray-600 text-sm">สด: <span id="sum-cash" class="text-green-600 font-bold">0</span> ฿</p>
+                    <p class="text-gray-600 text-sm mt-1">โอน: <span id="sum-transfer" class="text-blue-600 font-bold">0</span> ฿</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div class="md:col-span-2 bg-white p-4 rounded-xl shadow-sm border">
-                    <h3 class="font-bold text-gray-600 mb-2">📈 ยอดขายรายชั่วโมง</h3>
+                    <h3 class="font-bold text-gray-600 mb-2">📈 กราฟยอดขาย (แยกประเภท)</h3>
                     <div class="relative h-48 w-full"><canvas id="salesChart"></canvas></div>
                 </div>
                 <div class="bg-white p-4 rounded-xl shadow-sm border overflow-y-auto max-h-64">
@@ -227,7 +232,7 @@
             </div>
 
             <div class="bg-white p-6 rounded-2xl shadow-sm border">
-                <h2 class="text-xl font-bold mb-4 text-purple-800">👥 จัดการบัญชีพนักงาน (แก้รหัสแอดมิน 00 ได้ที่นี่)</h2>
+                <h2 class="text-xl font-bold mb-4 text-purple-800">👥 จัดการบัญชีพนักงาน</h2>
                 <div class="bg-purple-50 p-4 rounded-lg mb-4">
                     <input type="hidden" id="old-u-id">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3">
@@ -238,12 +243,12 @@
                     <div class="mb-2">
                         <p class="font-bold text-sm mb-2 text-gray-700">สิทธิ์การเข้าถึง:</p>
                         <div class="flex flex-wrap gap-4 text-sm">
-                            <label><input type="checkbox" id="p-pos" class="mr-1"> เครื่องดื่ม/อาหาร</label>
+                            <label><input type="checkbox" id="p-pos" class="mr-1"> เครื่อง/อาหาร</label>
                             <label><input type="checkbox" id="p-dash" class="mr-1"> ยอดขาย</label>
                             <label><input type="checkbox" id="p-stock" class="mr-1"> สต๊อก</label>
                             <label><input type="checkbox" id="p-crm" class="mr-1"> สมาชิก</label>
                             <label><input type="checkbox" id="p-admin" class="mr-1"> หลังร้าน</label>
-                            <label><input type="checkbox" id="p-del" class="mr-1"> ลบบิลได้</label>
+                            <label><input type="checkbox" id="p-del" class="mr-1"> ลบบิล</label>
                             <label class="font-bold text-blue-600 ml-4 border-l-2 pl-4"><input type="checkbox" id="p-all" onchange="toggleAllPerms(this)" class="mr-1"> เลือกทั้งหมด</label>
                         </div>
                     </div>
@@ -255,7 +260,6 @@
                 
                 <table class="w-full text-sm text-left"><tbody id="user-list"></tbody></table>
             </div>
-
         </div>
     </div>
 
@@ -298,11 +302,11 @@
             <h3 id="stk-m-name" class="text-xl font-bold text-blue-800 mb-4"></h3>
             <input type="hidden" id="stk-m-id">
             <select id="stk-m-type" class="w-full p-3 border-2 rounded-lg mb-3 font-bold">
-                <option value="IN">➕ ซื้อมา (ของเข้า)</option>
-                <option value="OUT">➖ เบิก (ของออก/ของเสีย)</option>
+                <option value="IN">➕ ซื้อมา</option>
+                <option value="OUT">➖ เบิก</option>
             </select>
             <input type="number" id="stk-m-amt" placeholder="จำนวน (ชิ้น)" class="w-full p-2 border rounded mb-3">
-            <input type="text" id="stk-m-reason" placeholder="หมายเหตุ (เช่น ซื้อเพิ่มที่แม็คโคร)" class="w-full p-2 border rounded mb-4">
+            <input type="text" id="stk-m-reason" placeholder="หมายเหตุ" class="w-full p-2 border rounded mb-4">
             <div class="flex gap-2">
                 <button onclick="confirmStockInOut()" class="w-2/3 bg-blue-600 text-white py-2 rounded-xl font-bold">บันทึก</button>
                 <button onclick="closeModal('modal-stock')" class="w-1/3 bg-gray-300 py-2 rounded-xl font-bold">ยกเลิก</button>
@@ -311,7 +315,7 @@
     </div>
 
     <script>
-        // --- 1. Firebase Config ---
+        // --- Firebase Config ---
         const firebaseConfig = {
             apiKey: "AIzaSyCTZ9MqTirZkosidhpHgnlH4a5TR_XxhLA",
             authDomain: "two-mice-57341.firebaseapp.com",
@@ -323,27 +327,19 @@
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const db = firebase.firestore();
 
-        // --- 2. Global Variables ---
-        let currentUser = null;
-        let menuItems = [], cart = [], allSales = [], usersList = [], stockItems = [];
+        let currentUser = null, menuItems = [], cart = [], allSales = [], usersList = [], stockItems = [];
         let sysSettings = { pin: "123", promoTarget: 10, promoReward: "ฟรี 1 สิทธิ์" };
-        let tempItemOpts = null; 
-        let tempAction = null; 
-        let salesChartObj = null;
-        let currentPosMode = 'food'; // 'food' หรือ 'drink'
+        let tempItemOpts = null, tempAction = null, salesChartObj = null;
+        let currentPosMode = 'food';
 
-        // --- 3. ระบบ Login & สิทธิ์ ---
+        // --- ระบบ Login & Nav ---
         async function login() {
-            const id = document.getElementById('login-id').value.trim();
-            const pass = document.getElementById('login-pass').value.trim();
+            const id = document.getElementById('login-id').value.trim(); const pass = document.getElementById('login-pass').value.trim();
             if(!id || !pass) return alert('กรอกให้ครบครับ');
 
-            // Default fallback if DB is empty
             if(id === '00' && pass === '111') {
                 const aDoc = await db.collection('users').doc('00').get();
-                if(!aDoc.exists) {
-                    await db.collection("users").doc('00').set({name: 'เจ้าของร้าน (Admin)', pass: '111', p: {pos:1, dash:1, stock:1, crm:1, admin:1, del:1}});
-                }
+                if(!aDoc.exists) await db.collection("users").doc('00').set({name: 'เจ้าของร้าน (Admin)', pass: '111', p: {pos:1, dash:1, stock:1, crm:1, admin:1, del:1}});
             }
 
             const doc = await db.collection('users').doc(id).get();
@@ -353,269 +349,155 @@
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('app-screen').classList.remove('hidden');
             document.getElementById('current-user-name').innerText = currentUser.name;
-            
             buildNav(); loadAllData();
         }
-
-        function logout() {
-            currentUser = null;
-            document.getElementById('app-screen').classList.add('hidden');
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('login-id').value = ''; document.getElementById('login-pass').value = '';
-        }
-
+        function logout() { currentUser = null; document.getElementById('app-screen').classList.add('hidden'); document.getElementById('login-screen').classList.remove('hidden'); document.getElementById('login-id').value = ''; document.getElementById('login-pass').value = ''; }
         function buildNav() {
-            const nav = document.getElementById('nav-buttons');
-            nav.innerHTML = '';
-            const p = currentUser.p;
-            // ลำดับ: อาหาร > เครื่องดื่ม > สมาชิก > ยอดขาย > หลังร้าน > สต็อก
-            if(p.pos) {
-                nav.innerHTML += `<button onclick="showPOS('food')" id="nav-food" class="bg-blue-900 px-4 py-2 rounded-lg font-bold hover:bg-orange-600 whitespace-nowrap">🍔 อาหาร</button>`;
-                nav.innerHTML += `<button onclick="showPOS('drink')" id="nav-drink" class="bg-blue-900 px-4 py-2 rounded-lg font-bold hover:bg-blue-600 whitespace-nowrap">🥤 เครื่องดื่ม</button>`;
-            }
+            const nav = document.getElementById('nav-buttons'); nav.innerHTML = ''; const p = currentUser.p;
+            if(p.pos) { nav.innerHTML += `<button onclick="showPOS('food')" id="nav-food" class="bg-blue-900 px-4 py-2 rounded-lg font-bold hover:bg-orange-600 whitespace-nowrap">🍔 อาหาร</button><button onclick="showPOS('drink')" id="nav-drink" class="bg-blue-900 px-4 py-2 rounded-lg font-bold hover:bg-blue-600 whitespace-nowrap">🥤 เครื่องดื่ม</button>`; }
             if(p.crm) nav.innerHTML += `<button onclick="showTab('crm')" class="bg-blue-900 px-3 py-2 rounded hover:bg-blue-700 whitespace-nowrap">สมาชิก</button>`;
             if(p.dash) nav.innerHTML += `<button onclick="showTab('dash')" class="bg-blue-900 px-3 py-2 rounded hover:bg-blue-700 whitespace-nowrap">ยอดขาย</button>`;
             if(p.admin) nav.innerHTML += `<button onclick="showTab('admin')" class="bg-red-700 px-3 py-2 rounded hover:bg-red-600 whitespace-nowrap">หลังร้าน</button>`;
             if(p.stock) nav.innerHTML += `<button onclick="showTab('stock')" class="bg-blue-900 px-3 py-2 rounded hover:bg-blue-700 whitespace-nowrap">สต๊อก</button>`;
-            
-            if(p.pos) showPOS('food');
-            else if(p.crm) showTab('crm');
-            else if(p.dash) showTab('dash');
+            if(p.pos) showPOS('food'); else if(p.crm) showTab('crm'); else if(p.dash) showTab('dash');
         }
-
         function showTab(t) {
-            document.querySelectorAll('.tab-content').forEach(e => e.classList.add('hidden'));
-            document.getElementById(t).classList.remove('hidden');
-            
-            // คืนค่าปุ่ม Nav
-            document.querySelectorAll('#nav-buttons button').forEach(b => {
-                b.classList.remove('bg-orange-600', 'bg-blue-600'); 
-                if(!b.classList.contains('bg-red-700')) b.classList.add('bg-blue-900');
-            });
-
+            document.querySelectorAll('.tab-content').forEach(e => e.classList.add('hidden')); document.getElementById(t).classList.remove('hidden');
+            document.querySelectorAll('#nav-buttons button').forEach(b => { b.classList.remove('bg-orange-600', 'bg-blue-600'); if(!b.classList.contains('bg-red-700')) b.classList.add('bg-blue-900'); });
             if(t==='dash') applyFilter();
         }
 
-        // --- 4. โหลดข้อมูล ---
+        // --- โหลดข้อมูล ---
         async function loadAllData() {
             db.collection("settings").doc("system").onSnapshot(doc => {
                 if(doc.exists) { sysSettings = doc.data(); }
-                document.getElementById('set-pin').value = sysSettings.pin || '123';
-                document.getElementById('set-target').value = sysSettings.promoTarget || 10;
-                document.getElementById('set-reward').value = sysSettings.promoReward || '';
-                document.getElementById('display-promo').innerText = `${sysSettings.promoTarget} แต้ม = ${sysSettings.promoReward}`;
+                document.getElementById('set-pin').value = sysSettings.pin || '123'; document.getElementById('set-target').value = sysSettings.promoTarget || 10; document.getElementById('set-reward').value = sysSettings.promoReward || ''; document.getElementById('display-promo').innerText = `${sysSettings.promoTarget} แต้ม = ${sysSettings.promoReward}`;
             });
-
-            db.collection("settings").doc("menuData").onSnapshot(doc => {
-                menuItems = doc.exists ? doc.data().items || [] : [];
-                if(currentUser.p.pos) renderPOSMenu();
-                if(currentUser.p.admin) renderAdminMenu();
-            });
-
-            if(currentUser.p.admin) {
-                db.collection("users").onSnapshot(snap => {
-                    usersList = [];
-                    snap.forEach(doc => { usersList.push({id: doc.id, ...doc.data()}); });
-                    renderUsers();
-                });
-            }
-
-            if(currentUser.p.stock) {
-                db.collection("stock_items").onSnapshot(snap => {
-                    stockItems = []; snap.forEach(doc => stockItems.push({id: doc.id, ...doc.data()})); renderStock();
-                });
-            }
-
-            if(currentUser.p.dash) {
-                db.collection("sales").orderBy("time", "desc").limit(1000).onSnapshot(snap => {
-                    allSales = [];
-                    snap.forEach(doc => {
-                        let s = doc.data();
-                        if(s.time) { s.dateObj = s.time.toDate(); allSales.push({ id: doc.id, ...s }); }
-                    });
-                    applyFilter();
-                });
-            }
+            db.collection("settings").doc("menuData").onSnapshot(doc => { menuItems = doc.exists ? doc.data().items || [] : []; if(currentUser.p.pos) renderPOSMenu(); if(currentUser.p.admin) renderAdminMenu(); });
+            if(currentUser.p.admin) { db.collection("users").onSnapshot(snap => { usersList = []; snap.forEach(doc => { usersList.push({id: doc.id, ...doc.data()}); }); renderUsers(); }); }
+            if(currentUser.p.stock) { db.collection("stock_items").onSnapshot(snap => { stockItems = []; snap.forEach(doc => stockItems.push({id: doc.id, ...doc.data()})); renderStock(); }); }
+            if(currentUser.p.dash) { db.collection("sales").orderBy("time", "desc").limit(1000).onSnapshot(snap => { allSales = []; snap.forEach(doc => { let s = doc.data(); if(s.time) { s.dateObj = s.time.toDate(); allSales.push({ id: doc.id, ...s }); } }); applyFilter(); }); }
         }
 
-        // --- 5. หน้าร้าน (POS) ---
+        // --- หน้าร้าน (POS) ---
         function showPOS(type) {
-            showTab('pos');
-            currentPosMode = type;
-            document.getElementById('pos-title').innerText = type === 'food' ? '🍔 เมนูอาหาร' : '🥤 เมนูเครื่องดื่ม';
-            
-            document.getElementById('nav-food').classList.remove('bg-orange-600');
-            document.getElementById('nav-drink').classList.remove('bg-blue-600');
-            if(type === 'food') {
-                document.getElementById('nav-food').classList.add('bg-orange-600');
-                document.getElementById('nav-food').classList.remove('bg-blue-900');
-            } else {
-                document.getElementById('nav-drink').classList.add('bg-blue-600');
-                document.getElementById('nav-drink').classList.remove('bg-blue-900');
-            }
+            showTab('pos'); currentPosMode = type; document.getElementById('pos-title').innerText = type === 'food' ? '🍔 เมนูอาหาร' : '🥤 เมนูเครื่องดื่ม';
+            document.getElementById('nav-food').classList.remove('bg-orange-600'); document.getElementById('nav-drink').classList.remove('bg-blue-600');
+            if(type === 'food') { document.getElementById('nav-food').classList.add('bg-orange-600'); document.getElementById('nav-food').classList.remove('bg-blue-900'); } else { document.getElementById('nav-drink').classList.add('bg-blue-600'); document.getElementById('nav-drink').classList.remove('bg-blue-900'); }
             renderPOSMenu();
         }
-
         function renderPOSMenu() {
             const con = document.getElementById('menu-container'); con.innerHTML = '';
-            // กรองเมนูตามประเภท (food หรือ drink) และไม่เอา topping
             let list = menuItems.filter(m => (m.type || 'drink') === currentPosMode && m.type !== 'topping');
-            
             const cats = [...new Set(list.map(m => m.c))];
             cats.forEach(cat => {
-                const items = list.filter(m => m.c === cat);
-                let color = currentPosMode === 'food' ? 'orange' : 'blue';
+                const items = list.filter(m => m.c === cat); let color = currentPosMode === 'food' ? 'orange' : 'blue';
                 let html = `<div class="mb-6"><h3 class="font-bold text-xl mb-3 text-gray-700 border-l-4 border-${color}-600 pl-2">${cat}</h3><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">`;
-                items.forEach(m => {
-                    html += `<div onclick="clickMenuItem('${m.n}', ${m.p})" class="bg-white p-4 rounded-xl shadow-sm border hover:border-${color}-400 active:scale-95 cursor-pointer flex flex-col justify-between">
-                        <p class="font-bold text-gray-800 text-lg">${m.n}</p><p class="text-${color}-600 font-bold text-right text-lg">${m.p}.-</p>
-                    </div>`;
-                });
+                items.forEach(m => { html += `<div onclick="clickMenuItem('${m.n}', ${m.p})" class="bg-white p-4 rounded-xl shadow-sm border hover:border-${color}-400 active:scale-95 cursor-pointer flex flex-col justify-between"><p class="font-bold text-gray-800 text-lg">${m.n}</p><p class="text-${color}-600 font-bold text-right text-lg">${m.p}.-</p></div>`; });
                 con.innerHTML += html + `</div></div>`;
             });
-
-            // อัปเดตรายการท้อปปิ้งใน Modal (เฉพาะตอนเป็นเครื่องดื่ม)
-            const topDiv = document.getElementById('opt-toppings'); topDiv.innerHTML = '';
-            let toppings = menuItems.filter(m => m.type === 'topping');
-            toppings.forEach(t => {
-                topDiv.innerHTML += `<label class="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer font-bold">
-                    <span><input type="checkbox" class="chk-topping mr-3 w-5 h-5" value="${t.n}|${t.p}">${t.n}</span>
-                    <span class="text-gray-500">+${t.p}฿</span>
-                </label>`;
-            });
-
-            // ตกแต่ง Radio ความหวาน
-            document.querySelectorAll('input[name="sweet"]').forEach(r => {
-                r.addEventListener('change', function() {
-                    document.querySelectorAll('input[name="sweet"]').forEach(x => {
-                        x.parentElement.classList.remove('bg-blue-100','border-blue-500');
-                        x.parentElement.querySelector('span').classList.remove('text-blue-700');
-                    });
-                    if(this.checked) {
-                        this.parentElement.classList.add('bg-blue-100','border-blue-500');
-                        this.parentElement.querySelector('span').classList.add('text-blue-700');
-                    }
-                });
-            });
+            const topDiv = document.getElementById('opt-toppings'); topDiv.innerHTML = ''; let toppings = menuItems.filter(m => m.type === 'topping');
+            toppings.forEach(t => { topDiv.innerHTML += `<label class="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer font-bold"><span><input type="checkbox" class="chk-topping mr-3 w-5 h-5" value="${t.n}|${t.p}">${t.n}</span><span class="text-gray-500">+${t.p}฿</span></label>`; });
+            document.querySelectorAll('input[name="sweet"]').forEach(r => { r.addEventListener('change', function() { document.querySelectorAll('input[name="sweet"]').forEach(x => { x.parentElement.classList.remove('bg-blue-100','border-blue-500'); x.parentElement.querySelector('span').classList.remove('text-blue-700'); }); if(this.checked) { this.parentElement.classList.add('bg-blue-100','border-blue-500'); this.parentElement.querySelector('span').classList.add('text-blue-700'); } }); });
         }
-
         function clickMenuItem(name, price) {
             if(currentPosMode === 'food') {
-                // อาหาร ลงตะกร้าเลย ไม่มีหวานไม่มีท้อปปิ้ง
-                cart.push({ cartId: Date.now(), n: name, p: price, basePrice: price, sweet: '', toppings: [] });
+                cart.push({ cartId: Date.now(), n: name, p: price, basePrice: price, type: 'food', sweet: '', toppings: [] });
                 updateCartUI();
             } else {
-                // เครื่องดื่ม เด้ง Modal
-                tempItemOpts = { n: name, p: price };
-                document.getElementById('opt-name').innerText = name;
-                document.querySelectorAll('.chk-topping').forEach(c => c.checked = false);
-                document.querySelector('input[name="sweet"][value="หวานปกติ"]').click();
+                tempItemOpts = { n: name, p: price, type: 'drink' }; document.getElementById('opt-name').innerText = name;
+                document.querySelectorAll('.chk-topping').forEach(c => c.checked = false); document.querySelector('input[name="sweet"][value="หวานปกติ"]').click();
                 openModal('modal-options');
             }
         }
-
         function confirmOptions() {
-            let sweet = document.querySelector('input[name="sweet"]:checked').value;
-            let tops = []; let addPrice = 0;
-            document.querySelectorAll('.chk-topping:checked').forEach(c => {
-                let [tn, tp] = c.value.split('|');
-                tops.push(tn); addPrice += parseInt(tp);
-            });
-            
-            cart.push({ cartId: Date.now(), n: tempItemOpts.n, p: tempItemOpts.p + addPrice, basePrice: tempItemOpts.p, sweet: sweet, toppings: tops });
+            let sweet = document.querySelector('input[name="sweet"]:checked').value; let tops = []; let addPrice = 0;
+            document.querySelectorAll('.chk-topping:checked').forEach(c => { let [tn, tp] = c.value.split('|'); tops.push(tn); addPrice += parseInt(tp); });
+            cart.push({ cartId: Date.now(), n: tempItemOpts.n, p: tempItemOpts.p + addPrice, basePrice: tempItemOpts.p, type: 'drink', sweet: sweet, toppings: tops });
             updateCartUI(); closeModal('modal-options');
         }
-
         function removeCart(id) { cart = cart.filter(i => i.cartId !== id); updateCartUI(); }
         function clearCart() { cart = []; updateCartUI(); }
-        
         function updateCartUI() {
-            const area = document.getElementById('cart');
-            let t = 0; area.innerHTML = '';
-            cart.forEach(it => { 
-                t += it.p; 
-                let subtxt = "";
-                if(it.sweet || it.toppings.length) {
-                    subtxt = `<span class="text-sm text-gray-500 block mt-1">${it.sweet}` + (it.toppings.length ? ` + ${it.toppings.join(', ')}` : '') + `</span>`;
-                }
-                area.innerHTML += `<div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border mb-2">
-                    <div><span class="text-lg font-bold">${it.n}</span>${subtxt}</div>
-                    <div class="flex items-center"><b class="mr-3 text-blue-700 text-lg">${it.p}.-</b><button onclick="removeCart(${it.cartId})" class="text-red-500 font-bold w-8 h-8 bg-red-100 rounded-full hover:bg-red-200">✕</button></div>
-                </div>`; 
-            });
+            const area = document.getElementById('cart'); let t = 0; area.innerHTML = '';
+            cart.forEach(it => { t += it.p; let subtxt = ""; if(it.sweet || it.toppings.length) { subtxt = `<span class="text-sm text-gray-500 block mt-1">${it.sweet}` + (it.toppings.length ? ` + ${it.toppings.join(', ')}` : '') + `</span>`; } area.innerHTML += `<div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border mb-2"><div><span class="text-lg font-bold">${it.n}</span>${subtxt}</div><div class="flex items-center"><b class="mr-3 text-blue-700 text-lg">${it.p}.-</b><button onclick="removeCart(${it.cartId})" class="text-red-500 font-bold w-8 h-8 bg-red-100 rounded-full hover:bg-red-200">✕</button></div></div>`; });
             document.getElementById('total').innerText = t;
         }
 
         async function checkout(method) {
             if(!cart.length) return alert('เลือกเมนูก่อนครับ');
-            const btnC = document.getElementById('btn-cash'); const btnT = document.getElementById('btn-transfer');
-            btnC.disabled = true; btnT.disabled = true;
-            
+            const btnC = document.getElementById('btn-cash'); const btnT = document.getElementById('btn-transfer'); btnC.disabled = true; btnT.disabled = true;
             try {
                 let ph = document.getElementById('custPhone').value.trim();
-                const cups = cart.filter(i => i.basePrice > 0).length;
                 const totalBaht = parseInt(document.getElementById('total').innerText);
+                
+                // คำนวณแยกจานกับแก้ว และยอดเงินแยก
+                let cups = cart.filter(i => i.type === 'drink').length;
+                let plates = cart.filter(i => i.type === 'food').length;
+                let drinkTotal = cart.filter(i => i.type === 'drink').reduce((s, i) => s + i.p, 0);
+                let foodTotal = cart.filter(i => i.type === 'food').reduce((s, i) => s + i.p, 0);
+                
+                let totalItems = cups + plates; // ได้แต้มทั้งแก้วและจาน
                 
                 await db.collection("sales").add({
                     time: firebase.firestore.FieldValue.serverTimestamp(),
-                    items: cart, total: totalBaht, cups: cups, phone: ph || '-', 
-                    seller: currentUser.name, method: method
+                    items: cart, total: totalBaht, 
+                    cups: cups, plates: plates, 
+                    drinkTotal: drinkTotal, foodTotal: foodTotal,
+                    phone: ph || '-', seller: currentUser.name, method: method
                 });
 
-                if(ph && cups > 0) {
+                if(ph && totalItems > 0) {
                     const memRef = db.collection("members").doc(ph);
                     await db.runTransaction(async (t) => {
-                        const doc = await t.get(memRef);
-                        const d = doc.exists ? doc.data() : { pts: 0, life: 0, hist: [] };
-                        t.set(memRef, { pts: (d.pts||0) + cups, life: (d.life||0) + cups }, { merge: true });
+                        const doc = await t.get(memRef); const d = doc.exists ? doc.data() : { pts: 0, life: 0, hist: [] };
+                        t.set(memRef, { pts: (d.pts||0) + totalItems, life: (d.life||0) + totalItems }, { merge: true });
                     });
                 }
-
-                alert(`✅ ชำระด้วย ${method} สำเร็จ!`);
-                clearCart(); document.getElementById('custPhone').value = '';
+                alert(`✅ ชำระด้วย ${method} สำเร็จ!`); clearCart(); document.getElementById('custPhone').value = '';
             } catch (e) { alert('Error: ' + e.message); }
             btnC.disabled = false; btnT.disabled = false;
         }
 
-        // --- 6. ยอดขาย (Dashboard) (คงเดิม) ---
+        // --- ยอดขาย (Dashboard) ---
         function applyFilter() {
             if(!currentUser.p.dash) return;
-            const filter = document.getElementById('timeFilter').value;
-            const now = new Date();
-            let start = new Date(now.getFullYear(), now.getMonth(), now.getDate()); 
-            let end = new Date(start.getTime() + 86400000); 
-
-            if(filter === 'yesterday') { end = start; start = new Date(start.getTime() - 86400000); } 
-            else if(filter === 'thisWeek') { const day = now.getDay() || 7; start = new Date(start.getTime() - (day - 1) * 86400000); end = now; } 
-            else if(filter === 'thisMonth') { start = new Date(now.getFullYear(), now.getMonth(), 1); end = now; } 
-            else if(filter === 'all') { start = new Date(2000,0,1); end = new Date(2100,0,1); }
-
+            const filter = document.getElementById('timeFilter').value; const now = new Date();
+            let start = new Date(now.getFullYear(), now.getMonth(), now.getDate()); let end = new Date(start.getTime() + 86400000); 
+            if(filter === 'yesterday') { end = start; start = new Date(start.getTime() - 86400000); } else if(filter === 'thisWeek') { const day = now.getDay() || 7; start = new Date(start.getTime() - (day - 1) * 86400000); end = now; } else if(filter === 'thisMonth') { start = new Date(now.getFullYear(), now.getMonth(), 1); end = now; } else if(filter === 'all') { start = new Date(2000,0,1); end = new Date(2100,0,1); }
             const data = allSales.filter(s => s.dateObj >= start && s.dateObj < end);
             renderDash(data); updateChart(data);
         }
 
         function renderDash(data) {
-            const l = document.getElementById('log');
-            let sumM = 0, sumC = 0, sumCash = 0, sumTrans = 0; let itemCounts = {}; l.innerHTML = '';
+            const l = document.getElementById('log'); l.innerHTML = '';
+            let sumM = 0, sumCash = 0, sumTrans = 0; 
+            let sumDrinkM = 0, sumDrinkC = 0, sumFoodM = 0, sumFoodC = 0;
+            let itemCounts = {}; 
+
             data.forEach(s => {
-                sumM += s.total; sumC += s.cups;
+                sumM += s.total;
                 if(s.method === 'เงินสด') sumCash += s.total; else sumTrans += s.total;
+                
+                // สำหรับข้อมูลเก่าที่ยังไม่มีการแยกประเภท
+                let cCups = s.cups || 0, cPlates = s.plates || 0, cDrinkM = s.drinkTotal || 0, cFoodM = s.foodTotal || 0;
+                if(s.cups === undefined && s.plates === undefined) {
+                    s.items.forEach(i => {
+                        if(i.type === 'food') { cPlates++; cFoodM += i.p; } else { cCups++; cDrinkM += i.p; }
+                    });
+                }
+                sumDrinkC += cCups; sumFoodC += cPlates;
+                sumDrinkM += cDrinkM; sumFoodM += cFoodM;
+
                 s.items.forEach(i => { itemCounts[i.n] = (itemCounts[i.n]||0) + 1; });
-
                 let tStr = s.dateObj.toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-                let itemsTxt = s.items.map(i => i.n + (i.toppings.length?`(+ท้อปปิ้ง)`:'')).join(', ');
-
-                l.innerHTML += `<tr class="border-b hover:bg-gray-50">
-                    <td class="p-2 text-xs text-gray-500">${tStr}</td>
-                    <td class="p-2 text-sm">${itemsTxt}</td>
-                    <td class="p-2 text-xs">${s.phone}</td>
-                    <td class="p-2 text-xs text-gray-500">${s.seller}</td>
-                    <td class="p-2 text-xs ${s.method==='เงินสด'?'text-yellow-600':'text-purple-600'}">${s.method}</td>
-                    <td class="p-2 font-bold text-right text-green-600">${s.total}</td>
-                    <td class="p-2 text-center"><button onclick="reqDeleteSale('${s.id}')" class="text-red-500 bg-red-50 px-2 py-1 rounded text-xs">ลบ</button></td>
-                </tr>`;
+                let itemsTxt = s.items.map(i => i.n + (i.toppings && i.toppings.length?`(+ท้อปปิ้ง)`:'')).join(', ');
+                l.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-2 text-xs text-gray-500">${tStr}</td><td class="p-2 text-sm">${itemsTxt}</td><td class="p-2 text-xs">${s.phone}</td><td class="p-2 text-xs text-gray-500">${s.seller}</td><td class="p-2 text-xs ${s.method==='เงินสด'?'text-yellow-600':'text-purple-600'}">${s.method}</td><td class="p-2 font-bold text-right text-green-600">${s.total}</td><td class="p-2 text-center"><button onclick="reqDeleteSale('${s.id}')" class="text-red-500 bg-red-50 px-2 py-1 rounded text-xs">ลบ</button></td></tr>`;
             });
-            document.getElementById('sum-m').innerText = sumM.toLocaleString(); document.getElementById('sum-c').innerText = sumC.toLocaleString();
+            
+            document.getElementById('sum-m').innerText = sumM.toLocaleString(); 
+            document.getElementById('sum-d-m').innerText = sumDrinkM.toLocaleString(); document.getElementById('sum-d-c').innerText = sumDrinkC.toLocaleString();
+            document.getElementById('sum-f-m').innerText = sumFoodM.toLocaleString(); document.getElementById('sum-f-c').innerText = sumFoodC.toLocaleString();
             document.getElementById('sum-cash').innerText = sumCash.toLocaleString(); document.getElementById('sum-transfer').innerText = sumTrans.toLocaleString();
 
             let topArr = Object.entries(itemCounts).sort((a,b) => b[1] - a[1]).slice(0,5);
@@ -624,34 +506,47 @@
 
         function updateChart(data) {
             const ctx = document.getElementById('salesChart').getContext('2d');
-            let hCups = Array(24).fill(0); data.forEach(s => { hCups[s.dateObj.getHours()] += s.cups; });
+            let hCups = Array(24).fill(0); let hPlates = Array(24).fill(0);
+            
+            data.forEach(s => { 
+                let hr = s.dateObj.getHours();
+                if(s.cups !== undefined) hCups[hr] += s.cups;
+                if(s.plates !== undefined) hPlates[hr] += s.plates;
+                
+                // Fallback for old data
+                if(s.cups === undefined && s.plates === undefined) {
+                    s.items.forEach(i => { if(i.type === 'food') hPlates[hr]++; else hCups[hr]++; });
+                }
+            });
+
             if(salesChartObj) salesChartObj.destroy();
-            salesChartObj = new Chart(ctx, { type: 'line', data: { labels: Array.from({length:24}, (_,i)=>`${i}:00`), datasets: [{ label: 'จำนวน/ชม.', data: hCups, borderColor: '#3b82f6', backgroundColor: '#bfdbfe', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } });
+            salesChartObj = new Chart(ctx, { 
+                type: 'line', 
+                data: { 
+                    labels: Array.from({length:24}, (_,i)=>`${i}:00`), 
+                    datasets: [
+                        { label: 'เครื่องดื่ม (แก้ว)', data: hCups, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3 },
+                        { label: 'อาหาร (จาน)', data: hPlates, borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.3 }
+                    ] 
+                }, 
+                options: { responsive: true, maintainAspectRatio: false } 
+            });
         }
 
         function exportSalesExcel() {
             if(!allSales.length) return;
-            let csv = '\uFEFFวันที่,เวลา,รายการ,รวมเงิน,รูปแบบ,คนขาย,เบอร์โทร\n';
+            let csv = '\uFEFFวันที่,เวลา,รายการ,ยอดเครื่องดื่ม,ยอดอาหาร,รวมเงิน,รูปแบบ,คนขาย,เบอร์โทร\n';
             allSales.forEach(s => {
-                let d = s.dateObj;
-                let dt = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; let tm = `${d.getHours()}:${d.getMinutes()}`;
-                let items = s.items.map(i=> i.n + (i.toppings.length?`(+${i.toppings.join('+')})`:'') ).join(' | ');
-                csv += `${dt},${tm},"${items}",${s.total},${s.method},${s.seller},${s.phone}\n`;
+                let d = s.dateObj; let dt = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; let tm = `${d.getHours()}:${d.getMinutes()}`;
+                let items = s.items.map(i=> i.n + (i.toppings && i.toppings.length?`(+${i.toppings.join('+')})`:'') ).join(' | ');
+                csv += `${dt},${tm},"${items}",${s.drinkTotal||0},${s.foodTotal||0},${s.total},${s.method},${s.seller},${s.phone}\n`;
             });
             const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
             link.download = "Sales_TwoMice.csv"; link.click();
         }
 
-        function reqDeleteSale(id) {
-            if(currentUser.p.del) { executeDeleteSale(id); } 
-            else { tempAction = () => executeDeleteSale(id); openModal('modal-pin'); }
-        }
-        function verifyPinAndExecute() {
-            const pin = document.getElementById('override-pin').value;
-            if(pin === sysSettings.pin) { closeModal('modal-pin'); if(tempAction) tempAction(); }
-            else alert('รหัสฉุกเฉินไม่ถูกต้อง');
-            document.getElementById('override-pin').value = '';
-        }
+        function reqDeleteSale(id) { if(currentUser.p.del) { executeDeleteSale(id); } else { tempAction = () => executeDeleteSale(id); openModal('modal-pin'); } }
+        function verifyPinAndExecute() { const pin = document.getElementById('override-pin').value; if(pin === sysSettings.pin) { closeModal('modal-pin'); if(tempAction) tempAction(); } else alert('รหัสฉุกเฉินไม่ถูกต้อง'); document.getElementById('override-pin').value = ''; }
         async function executeDeleteSale(id) {
             if(!confirm("ยืนยันการลบบิลนี้?")) return;
             const doc = await db.collection("sales").doc(id).get();
@@ -662,218 +557,38 @@
                 await db.runTransaction(async t => {
                     const md = await t.get(memRef);
                     if(md.exists) {
-                        let p = md.data().pts - data.cups; let l = md.data().life - data.cups;
+                        let totalItems = (data.cups||0) + (data.plates||0);
+                        let p = md.data().pts - totalItems; let l = md.data().life - totalItems;
                         t.update(memRef, { pts: p<0?0:p, life: l<0?0:l });
                     }
                 });
             }
         }
 
-        // --- 7. สต๊อกสินค้า ---
-        async function saveStockItem() {
-            const id = document.getElementById('stock-id').value;
-            const name = document.getElementById('s-name').value.trim();
-            const cost = parseInt(document.getElementById('s-cost').value);
-            if(!name || isNaN(cost)) return alert('กรอกชื่อและต้นทุน');
-
-            if(id) { await db.collection("stock_items").doc(id).update({name, cost}); }
-            else { await db.collection("stock_items").add({name, cost, qty: 0}); }
-            document.getElementById('s-name').value=''; document.getElementById('s-cost').value=''; document.getElementById('stock-id').value='';
-        }
-        function renderStock() {
-            const list = document.getElementById('stock-list'); list.innerHTML = '';
-            stockItems.forEach(s => {
-                list.innerHTML += `<tr class="border-b">
-                    <td class="p-2 font-bold">${s.name}</td>
-                    <td class="p-2 text-center text-gray-500">${s.cost}</td>
-                    <td class="p-2 text-center text-xl font-bold ${s.qty<=10?'text-red-500':'text-green-600'}">${s.qty}</td>
-                    <td class="p-2 text-center flex justify-center gap-2">
-                        <button onclick="openStockInOut('${s.id}','${s.name}')" class="bg-blue-100 text-blue-700 px-3 py-1 rounded font-bold hover:bg-blue-200">เข้า/ออก</button>
-                        <button onclick="deleteStockForever('${s.id}')" class="bg-red-100 text-red-600 px-3 py-1 rounded font-bold hover:bg-red-200">ลบถาวร</button>
-                    </td>
-                </tr>`;
-            });
-        }
-        async function deleteStockForever(id) {
-            if(confirm('ลบวัตถุดิบนี้ออกจากระบบอย่างถาวร? (จะไม่แสดงในรายชื่ออีก)')) {
-                await db.collection("stock_items").doc(id).delete();
-            }
-        }
-        function openStockInOut(id, name) {
-            document.getElementById('stk-m-id').value = id; document.getElementById('stk-m-name').innerText = name; openModal('modal-stock');
-        }
-        async function confirmStockInOut() {
-            const id = document.getElementById('stk-m-id').value; const name = document.getElementById('stk-m-name').innerText;
-            const type = document.getElementById('stk-m-type').value; const amt = parseInt(document.getElementById('stk-m-amt').value);
-            const reason = document.getElementById('stk-m-reason').value.trim() || '-';
-            if(isNaN(amt) || amt <= 0) return alert('ใส่จำนวนให้ถูกต้อง');
-
-            const ref = db.collection("stock_items").doc(id);
-            await db.runTransaction(async t => {
-                const doc = await t.get(ref); let newQty = doc.data().qty + (type==='IN'?amt:-amt); t.update(ref, { qty: newQty });
-            });
-            await db.collection("stock_logs").add({ time: firebase.firestore.FieldValue.serverTimestamp(), itemId: id, itemName: name, type: type==='IN'?'ซื้อมา':'เบิก', amount: amt, reason: reason, user: currentUser.name });
-            closeModal('modal-stock'); document.getElementById('stk-m-amt').value=''; document.getElementById('stk-m-reason').value='';
-        }
-        async function exportStockExcel() {
-            const snap = await db.collection("stock_logs").orderBy("time","desc").limit(500).get();
-            if(snap.empty) return alert('ไม่มีประวัติ');
-            let csv = '\uFEFFวัน-เวลา,วัตถุดิบ,ประเภท,จำนวน,เหตุผล,ผู้บันทึก\n';
-            snap.forEach(d => {
-                let v = d.data();
-                if(v.time) {
-                    let dateStr = v.time.toDate().toLocaleString('th-TH'); csv += `${dateStr},${v.itemName},${v.type},${v.amount},${v.reason},${v.user}\n`;
-                }
-            });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = "StockLog_TwoMice.csv"; link.click();
-        }
-
-        // --- 8. สมาชิก & CRM (คงเดิม) ---
-        async function searchPoints() {
-            const p = document.getElementById('fPhone').value.trim(); if(!p) return;
-            const doc = await db.collection("members").doc(p).get();
-            const resArea = document.getElementById('member-result'); const rwZone = document.getElementById('reward-zone');
-            resArea.classList.remove('hidden'); resArea.classList.add('flex');
-            if (doc.exists) {
-                const data = doc.data(); const pts = data.pts || 0;
-                document.getElementById('crm-pts').innerText = pts; document.getElementById('crm-lifetime').innerText = data.life || 0;
-                if(pts >= sysSettings.promoTarget) { rwZone.innerHTML = `<button onclick="claimReward('${p}')" class="bg-green-600 text-white px-8 py-3 rounded-xl font-bold text-lg w-full hover:bg-green-500 shadow">🎁 แลกรับ: ${sysSettings.promoReward}</button>`; } 
-                else { rwZone.innerHTML = `<p class="text-red-500 font-bold">ขาดอีก ${sysSettings.promoTarget - pts} แต้ม จึงจะแลกได้</p>`; }
-                const histList = document.getElementById('crm-history'); histList.innerHTML = '';
-                if(data.hist && data.hist.length > 0) { [...data.hist].reverse().forEach(h => { let d = h.date.toDate ? h.date.toDate().toLocaleString('th-TH',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : ''; histList.innerHTML += `<li class="border-b pb-1 mb-1"><span class="text-gray-500">${d}</span> - แลก <b class="text-blue-600">${h.reward}</b></li>`; }); } 
-                else { histList.innerHTML = '<li class="text-gray-400 italic">ยังไม่มีประวัติ</li>'; }
-            } else {
-                document.getElementById('crm-pts').innerText = "0"; document.getElementById('crm-lifetime').innerText = "0";
-                rwZone.innerHTML = ''; document.getElementById('crm-history').innerHTML = '<li class="text-gray-400 italic">ไม่พบประวัติ (เริ่มนับเมื่อซื้อครั้งแรก)</li>';
-            }
-        }
-        async function claimReward(phone) {
-            if(!confirm(`หัก ${sysSettings.promoTarget} แต้ม เพื่อแลก ${sysSettings.promoReward}?`)) return;
-            const ref = db.collection("members").doc(phone);
-            await db.runTransaction(async t => {
-                const doc = await t.get(ref); const d = doc.data();
-                let newHist = d.hist || []; newHist.push({ date: new Date(), reward: sysSettings.promoReward, used: sysSettings.promoTarget });
-                t.update(ref, { pts: d.pts - sysSettings.promoTarget, hist: newHist });
-            });
-            alert('แลกสิทธิ์สำเร็จ!'); searchPoints();
-        }
-
-        // --- 9. Admin หลังร้าน ---
-        async function saveSystemSettings() {
-            let pin = document.getElementById('set-pin').value; let target = parseInt(document.getElementById('set-target').value); let rw = document.getElementById('set-reward').value;
-            if(!pin || isNaN(target) || !rw) return alert('กรอกให้ครบ');
-            await db.collection("settings").doc("system").set({ pin: pin, promoTarget: target, promoReward: rw }, {merge:true}); alert('บันทึกตั้งค่าสำเร็จ');
-        }
-
-        // User Management (เพิ่มระบบแก้ ID/Pass)
+        // --- ฟังก์ชันอื่นๆ (สต๊อก, CRM, Admin) ---
+        // สต๊อก
+        async function saveStockItem() { const id = document.getElementById('stock-id').value; const name = document.getElementById('s-name').value.trim(); const cost = parseInt(document.getElementById('s-cost').value); if(!name || isNaN(cost)) return alert('กรอกชื่อและต้นทุน'); if(id) { await db.collection("stock_items").doc(id).update({name, cost}); } else { await db.collection("stock_items").add({name, cost, qty: 0}); } document.getElementById('s-name').value=''; document.getElementById('s-cost').value=''; document.getElementById('stock-id').value=''; }
+        function renderStock() { const list = document.getElementById('stock-list'); list.innerHTML = ''; stockItems.forEach(s => { list.innerHTML += `<tr class="border-b"><td class="p-2 font-bold">${s.name}</td><td class="p-2 text-center text-gray-500">${s.cost}</td><td class="p-2 text-center text-xl font-bold ${s.qty<=10?'text-red-500':'text-green-600'}">${s.qty}</td><td class="p-2 text-center flex justify-center gap-2"><button onclick="openStockInOut('${s.id}','${s.name}')" class="bg-blue-100 text-blue-700 px-3 py-1 rounded font-bold hover:bg-blue-200">เข้า/ออก</button><button onclick="deleteStockForever('${s.id}')" class="bg-red-100 text-red-600 px-3 py-1 rounded font-bold hover:bg-red-200">ลบถาวร</button></td></tr>`; }); }
+        async function deleteStockForever(id) { if(confirm('ลบวัตถุดิบนี้ออกจากระบบอย่างถาวร?')) { await db.collection("stock_items").doc(id).delete(); } }
+        function openStockInOut(id, name) { document.getElementById('stk-m-id').value = id; document.getElementById('stk-m-name').innerText = name; openModal('modal-stock'); }
+        async function confirmStockInOut() { const id = document.getElementById('stk-m-id').value; const name = document.getElementById('stk-m-name').innerText; const type = document.getElementById('stk-m-type').value; const amt = parseInt(document.getElementById('stk-m-amt').value); const reason = document.getElementById('stk-m-reason').value.trim() || '-'; if(isNaN(amt) || amt <= 0) return alert('ใส่จำนวนให้ถูกต้อง'); const ref = db.collection("stock_items").doc(id); await db.runTransaction(async t => { const doc = await t.get(ref); let newQty = doc.data().qty + (type==='IN'?amt:-amt); t.update(ref, { qty: newQty }); }); await db.collection("stock_logs").add({ time: firebase.firestore.FieldValue.serverTimestamp(), itemId: id, itemName: name, type: type==='IN'?'ซื้อมา':'เบิก', amount: amt, reason: reason, user: currentUser.name }); closeModal('modal-stock'); document.getElementById('stk-m-amt').value=''; document.getElementById('stk-m-reason').value=''; }
+        async function exportStockExcel() { const snap = await db.collection("stock_logs").orderBy("time","desc").limit(500).get(); if(snap.empty) return alert('ไม่มีประวัติ'); let csv = '\uFEFFวัน-เวลา,วัตถุดิบ,ประเภท,จำนวน,เหตุผล,ผู้บันทึก\n'; snap.forEach(d => { let v = d.data(); if(v.time) { let dateStr = v.time.toDate().toLocaleString('th-TH'); csv += `${dateStr},${v.itemName},${v.type},${v.amount},${v.reason},${v.user}\n`; } }); const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = "StockLog_TwoMice.csv"; link.click(); }
+        // CRM
+        async function searchPoints() { const p = document.getElementById('fPhone').value.trim(); if(!p) return; const doc = await db.collection("members").doc(p).get(); const resArea = document.getElementById('member-result'); const rwZone = document.getElementById('reward-zone'); resArea.classList.remove('hidden'); resArea.classList.add('flex'); if (doc.exists) { const data = doc.data(); const pts = data.pts || 0; document.getElementById('crm-pts').innerText = pts; document.getElementById('crm-lifetime').innerText = data.life || 0; if(pts >= sysSettings.promoTarget) { rwZone.innerHTML = `<button onclick="claimReward('${p}')" class="bg-green-600 text-white px-8 py-3 rounded-xl font-bold text-lg w-full hover:bg-green-500 shadow">🎁 แลกรับ: ${sysSettings.promoReward}</button>`; } else { rwZone.innerHTML = `<p class="text-red-500 font-bold">ขาดอีก ${sysSettings.promoTarget - pts} แต้ม จึงจะแลกได้</p>`; } const histList = document.getElementById('crm-history'); histList.innerHTML = ''; if(data.hist && data.hist.length > 0) { [...data.hist].reverse().forEach(h => { let d = h.date.toDate ? h.date.toDate().toLocaleString('th-TH',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : ''; histList.innerHTML += `<li class="border-b pb-1 mb-1"><span class="text-gray-500">${d}</span> - แลก <b class="text-blue-600">${h.reward}</b></li>`; }); } else { histList.innerHTML = '<li class="text-gray-400 italic">ยังไม่มีประวัติ</li>'; } } else { document.getElementById('crm-pts').innerText = "0"; document.getElementById('crm-lifetime').innerText = "0"; rwZone.innerHTML = ''; document.getElementById('crm-history').innerHTML = '<li class="text-gray-400 italic">ไม่พบประวัติ (เริ่มนับเมื่อซื้อครั้งแรก)</li>'; } }
+        async function claimReward(phone) { if(!confirm(`หัก ${sysSettings.promoTarget} แต้ม เพื่อแลก ${sysSettings.promoReward}?`)) return; const ref = db.collection("members").doc(phone); await db.runTransaction(async t => { const doc = await t.get(ref); const d = doc.data(); let newHist = d.hist || []; newHist.push({ date: new Date(), reward: sysSettings.promoReward, used: sysSettings.promoTarget }); t.update(ref, { pts: d.pts - sysSettings.promoTarget, hist: newHist }); }); alert('แลกสิทธิ์สำเร็จ!'); searchPoints(); }
+        // Admin
+        async function saveSystemSettings() { let pin = document.getElementById('set-pin').value; let target = parseInt(document.getElementById('set-target').value); let rw = document.getElementById('set-reward').value; if(!pin || isNaN(target) || !rw) return alert('กรอกให้ครบ'); await db.collection("settings").doc("system").set({ pin: pin, promoTarget: target, promoReward: rw }, {merge:true}); alert('บันทึกตั้งค่าสำเร็จ'); }
         function toggleAllPerms(el) { ['p-pos','p-dash','p-stock','p-crm','p-admin','p-del'].forEach(id => document.getElementById(id).checked = el.checked); }
-        function cancelUserEdit() {
-            document.getElementById('old-u-id').value = ''; document.getElementById('u-id').value = ''; document.getElementById('u-pass').value = ''; document.getElementById('u-name').value = '';
-            document.getElementById('p-all').checked = false; toggleAllPerms(document.getElementById('p-all'));
-        }
-        function editUser(id) {
-            const u = usersList.find(x => x.id === id); if(!u) return;
-            document.getElementById('old-u-id').value = u.id;
-            document.getElementById('u-id').value = u.id;
-            document.getElementById('u-pass').value = u.pass;
-            document.getElementById('u-name').value = u.name;
-            document.getElementById('p-pos').checked = u.p.pos; document.getElementById('p-dash').checked = u.p.dash; document.getElementById('p-stock').checked = u.p.stock;
-            document.getElementById('p-crm').checked = u.p.crm; document.getElementById('p-admin').checked = u.p.admin; document.getElementById('p-del').checked = u.p.del;
-        }
-        async function saveUser() {
-            let oldId = document.getElementById('old-u-id').value;
-            let newId = document.getElementById('u-id').value.trim();
-            let pass = document.getElementById('u-pass').value.trim();
-            let name = document.getElementById('u-name').value.trim();
-            
-            if(!newId || !pass || !name) return alert('กรอกข้อมูลพนักงานให้ครบ');
-            if(newId.length !== 2 || pass.length !== 3) return alert('ID ต้อง 2 หลัก / รหัสผ่านต้อง 3 หลัก');
-            
-            let p = { pos:document.getElementById('p-pos').checked, dash:document.getElementById('p-dash').checked, stock:document.getElementById('p-stock').checked, crm:document.getElementById('p-crm').checked, admin:document.getElementById('p-admin').checked, del:document.getElementById('p-del').checked };
-            
-            if(oldId && oldId !== newId) {
-                // เปลี่ยน ID (ต้องลบอันเก่า สร้างอันใหม่)
-                await db.collection("users").doc(newId).set({name, pass, p});
-                await db.collection("users").doc(oldId).delete();
-                if(currentUser.id === oldId) currentUser.id = newId; // ถ้าแก้ตัวเองให้อัปเดต session
-            } else {
-                await db.collection("users").doc(newId).set({name, pass, p});
-            }
-            alert('บันทึกพนักงานสำเร็จ'); cancelUserEdit();
-        }
-        function renderUsers() {
-            const l = document.getElementById('user-list'); l.innerHTML = '';
-            usersList.forEach(u => {
-                let pStr = Object.keys(u.p).filter(k=>u.p[k]).join(', ');
-                l.innerHTML += `<tr class="border-b">
-                    <td class="p-2 font-bold">ID: ${u.id}</td><td class="p-2">${u.name}</td>
-                    <td class="p-2 text-xs text-gray-500">[${pStr}]</td>
-                    <td class="p-2 text-right">
-                        <button onclick="editUser('${u.id}')" class="text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded mr-2">แก้</button>
-                        ${u.id !== '00' ? `<button onclick="deleteUser('${u.id}')" class="text-red-500 font-bold bg-red-50 px-3 py-1 rounded">ลบ</button>` : ''}
-                    </td>
-                </tr>`;
-            });
-        }
+        function cancelUserEdit() { document.getElementById('old-u-id').value = ''; document.getElementById('u-id').value = ''; document.getElementById('u-pass').value = ''; document.getElementById('u-name').value = ''; document.getElementById('p-all').checked = false; toggleAllPerms(document.getElementById('p-all')); }
+        function editUser(id) { const u = usersList.find(x => x.id === id); if(!u) return; document.getElementById('old-u-id').value = u.id; document.getElementById('u-id').value = u.id; document.getElementById('u-pass').value = u.pass; document.getElementById('u-name').value = u.name; document.getElementById('p-pos').checked = u.p.pos; document.getElementById('p-dash').checked = u.p.dash; document.getElementById('p-stock').checked = u.p.stock; document.getElementById('p-crm').checked = u.p.crm; document.getElementById('p-admin').checked = u.p.admin; document.getElementById('p-del').checked = u.p.del; }
+        async function saveUser() { let oldId = document.getElementById('old-u-id').value; let newId = document.getElementById('u-id').value.trim(); let pass = document.getElementById('u-pass').value.trim(); let name = document.getElementById('u-name').value.trim(); if(!newId || !pass || !name) return alert('กรอกข้อมูลพนักงานให้ครบ'); if(newId.length !== 2 || pass.length !== 3) return alert('ID ต้อง 2 หลัก / รหัสผ่านต้อง 3 หลัก'); let p = { pos:document.getElementById('p-pos').checked, dash:document.getElementById('p-dash').checked, stock:document.getElementById('p-stock').checked, crm:document.getElementById('p-crm').checked, admin:document.getElementById('p-admin').checked, del:document.getElementById('p-del').checked }; if(oldId && oldId !== newId) { await db.collection("users").doc(newId).set({name, pass, p}); await db.collection("users").doc(oldId).delete(); if(currentUser.id === oldId) currentUser.id = newId; } else { await db.collection("users").doc(newId).set({name, pass, p}); } alert('บันทึกพนักงานสำเร็จ'); cancelUserEdit(); }
+        function renderUsers() { const l = document.getElementById('user-list'); l.innerHTML = ''; usersList.forEach(u => { let pStr = Object.keys(u.p).filter(k=>u.p[k]).join(', '); l.innerHTML += `<tr class="border-b"><td class="p-2 font-bold">ID: ${u.id}</td><td class="p-2">${u.name}</td><td class="p-2 text-xs text-gray-500">[${pStr}]</td><td class="p-2 text-right"><button onclick="editUser('${u.id}')" class="text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded mr-2">แก้</button>${u.id !== '00' ? `<button onclick="deleteUser('${u.id}')" class="text-red-500 font-bold bg-red-50 px-3 py-1 rounded">ลบ</button>` : ''}</td></tr>`; }); }
         async function deleteUser(id) { if(confirm('ลบบัญชีนี้?')) await db.collection("users").doc(id).delete(); }
-
-        // Menu Management (แยก อาหาร และ เครื่องดื่ม)
-        function renderAdminMenu() {
-            const listD = document.getElementById('admin-drink-list'); listD.innerHTML = '';
-            const listF = document.getElementById('admin-food-list'); listF.innerHTML = '';
-            
-            menuItems.forEach((m, i) => {
-                let html = `<li class="flex justify-between items-center bg-gray-50 p-2 rounded border">
-                    <div><span class="text-xs bg-gray-200 px-2 py-1 rounded mr-2 font-bold">${m.type==='topping'?'ท้อปปิ้ง':m.c}</span><b>${m.n}</b></div>
-                    <div class="flex items-center gap-2"><span class="font-bold text-gray-700">${m.p}.-</span>
-                    <button onclick="editMenu(${i}, '${m.type}')" class="text-yellow-600 px-2 bg-yellow-100 rounded text-sm font-bold">แก้</button>
-                    <button onclick="deleteMenu(${i})" class="text-red-500 px-2 bg-red-100 rounded text-sm font-bold">ลบ</button></div>
-                </li>`;
-                
-                if(m.type === 'food') listF.innerHTML += html;
-                else listD.innerHTML += html;
-            });
-        }
-        function editMenu(idx, type) {
-            let m = menuItems[idx];
-            if(type === 'food') {
-                document.getElementById('edit-f-idx').value = idx;
-                document.getElementById('m-f-cat').value = m.c || ''; document.getElementById('m-f-name').value = m.n; document.getElementById('m-f-price').value = m.p;
-                document.getElementById('btn-cancel-food').classList.remove('hidden');
-            } else {
-                document.getElementById('edit-d-idx').value = idx;
-                document.getElementById('m-d-cat').value = m.c || ''; document.getElementById('m-d-name').value = m.n; document.getElementById('m-d-price').value = m.p;
-                document.getElementById('m-d-topping').checked = (m.type === 'topping');
-                document.getElementById('btn-cancel-drink').classList.remove('hidden');
-            }
-        }
-        function cancelMenuEdit(type) {
-            if(type === 'food') { document.getElementById('edit-f-idx').value = -1; document.getElementById('m-f-cat').value=''; document.getElementById('m-f-name').value=''; document.getElementById('m-f-price').value=''; document.getElementById('btn-cancel-food').classList.add('hidden'); }
-            else { document.getElementById('edit-d-idx').value = -1; document.getElementById('m-d-cat').value=''; document.getElementById('m-d-name').value=''; document.getElementById('m-d-price').value=''; document.getElementById('m-d-topping').checked=false; document.getElementById('btn-cancel-drink').classList.add('hidden'); }
-        }
-        async function saveMenu(type) {
-            let m = {}; let idx = -1;
-            if(type === 'food') {
-                idx = parseInt(document.getElementById('edit-f-idx').value);
-                m = { c: document.getElementById('m-f-cat').value.trim() || 'อาหารทั่วไป', n: document.getElementById('m-f-name').value.trim(), p: parseInt(document.getElementById('m-f-price').value), type: 'food' };
-            } else {
-                idx = parseInt(document.getElementById('edit-d-idx').value);
-                let isTop = document.getElementById('m-d-topping').checked;
-                m = { c: isTop ? 'ท้อปปิ้ง' : (document.getElementById('m-d-cat').value.trim() || 'เครื่องดื่มทั่วไป'), n: document.getElementById('m-d-name').value.trim(), p: parseInt(document.getElementById('m-d-price').value), type: isTop ? 'topping' : 'drink' };
-            }
-            if(!m.n || isNaN(m.p)) return alert('กรอกชื่อและราคาให้ครบ');
-
-            if(idx > -1) menuItems[idx] = m; else menuItems.push(m);
-            await db.collection("settings").doc("menuData").set({items: menuItems});
-            cancelMenuEdit(type); alert('บันทึกเมนูสำเร็จ');
-        }
-        async function deleteMenu(idx) {
-            if(!confirm('ลบเมนูนี้?')) return;
-            menuItems.splice(idx, 1);
-            await db.collection("settings").doc("menuData").set({items: menuItems});
-        }
-
-        // Utils
+        function renderAdminMenu() { const listD = document.getElementById('admin-drink-list'); listD.innerHTML = ''; const listF = document.getElementById('admin-food-list'); listF.innerHTML = ''; menuItems.forEach((m, i) => { let html = `<li class="flex justify-between items-center bg-gray-50 p-2 rounded border"><div><span class="text-xs bg-gray-200 px-2 py-1 rounded mr-2 font-bold">${m.type==='topping'?'ท้อปปิ้ง':m.c}</span><b>${m.n}</b></div><div class="flex items-center gap-2"><span class="font-bold text-gray-700">${m.p}.-</span><button onclick="editMenu(${i}, '${m.type}')" class="text-yellow-600 px-2 bg-yellow-100 rounded text-sm font-bold">แก้</button><button onclick="deleteMenu(${i})" class="text-red-500 px-2 bg-red-100 rounded text-sm font-bold">ลบ</button></div></li>`; if(m.type === 'food') listF.innerHTML += html; else listD.innerHTML += html; }); }
+        function editMenu(idx, type) { let m = menuItems[idx]; if(type === 'food') { document.getElementById('edit-f-idx').value = idx; document.getElementById('m-f-cat').value = m.c || ''; document.getElementById('m-f-name').value = m.n; document.getElementById('m-f-price').value = m.p; document.getElementById('btn-cancel-food').classList.remove('hidden'); } else { document.getElementById('edit-d-idx').value = idx; document.getElementById('m-d-cat').value = m.c || ''; document.getElementById('m-d-name').value = m.n; document.getElementById('m-d-price').value = m.p; document.getElementById('m-d-topping').checked = (m.type === 'topping'); document.getElementById('btn-cancel-drink').classList.remove('hidden'); } }
+        function cancelMenuEdit(type) { if(type === 'food') { document.getElementById('edit-f-idx').value = -1; document.getElementById('m-f-cat').value=''; document.getElementById('m-f-name').value=''; document.getElementById('m-f-price').value=''; document.getElementById('btn-cancel-food').classList.add('hidden'); } else { document.getElementById('edit-d-idx').value = -1; document.getElementById('m-d-cat').value=''; document.getElementById('m-d-name').value=''; document.getElementById('m-d-price').value=''; document.getElementById('m-d-topping').checked=false; document.getElementById('btn-cancel-drink').classList.add('hidden'); } }
+        async function saveMenu(type) { let m = {}; let idx = -1; if(type === 'food') { idx = parseInt(document.getElementById('edit-f-idx').value); m = { c: document.getElementById('m-f-cat').value.trim() || 'อาหารทั่วไป', n: document.getElementById('m-f-name').value.trim(), p: parseInt(document.getElementById('m-f-price').value), type: 'food' }; } else { idx = parseInt(document.getElementById('edit-d-idx').value); let isTop = document.getElementById('m-d-topping').checked; m = { c: isTop ? 'ท้อปปิ้ง' : (document.getElementById('m-d-cat').value.trim() || 'เครื่องดื่มทั่วไป'), n: document.getElementById('m-d-name').value.trim(), p: parseInt(document.getElementById('m-d-price').value), type: isTop ? 'topping' : 'drink' }; } if(!m.n || isNaN(m.p)) return alert('กรอกชื่อและราคาให้ครบ'); if(idx > -1) menuItems[idx] = m; else menuItems.push(m); await db.collection("settings").doc("menuData").set({items: menuItems}); cancelMenuEdit(type); alert('บันทึกเมนูสำเร็จ'); }
+        async function deleteMenu(idx) { if(!confirm('ลบเมนูนี้?')) return; menuItems.splice(idx, 1); await db.collection("settings").doc("menuData").set({items: menuItems}); }
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
     </script>
