@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two Mice POS (Ultimate V4.3 - Admin Edit)</title>
+    <title>Two Mice POS (Ultimate V4.4 - Full Retro & Edit)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -67,7 +67,10 @@
 
         <div id="dash" class="tab-content hidden p-4 max-w-7xl mx-auto">
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
-                <h2 class="text-2xl font-bold text-blue-800">📊 สรุปยอดขาย</h2>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <h2 class="text-2xl font-bold text-blue-800">📊 สรุปยอดขาย</h2>
+                    <button onclick="reqAction('createRetro')" class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-bold border border-blue-200 hover:bg-blue-200 shadow-sm transition">➕ คีย์บิลย้อนหลัง</button>
+                </div>
                 <div class="flex flex-wrap gap-2 items-center bg-white p-2 rounded-xl shadow-sm border">
                     <select id="timeFilter" onchange="toggleDateFilter()" class="p-2 bg-gray-50 rounded-lg font-bold text-gray-700 outline-none cursor-pointer border">
                         <option value="today">วันนี้</option>
@@ -163,21 +166,19 @@
         </div>
 
         <div id="stock" class="tab-content hidden p-4 max-w-5xl mx-auto">
-            <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+             <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
                 <h2 class="text-2xl font-bold text-blue-800">📦 ระบบสต๊อกวัตถุดิบ</h2>
                 <button onclick="exportStockExcel()" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow hover:bg-green-500 active:scale-95 transition">⬇️ โหลดประวัติ (Excel)</button>
             </div>
-            
             <div class="bg-white p-6 rounded-2xl shadow-sm border mb-6">
                 <h3 class="font-bold text-lg mb-3">➕ เพิ่มรายการวัตถุดิบใหม่</h3>
                 <div class="flex gap-2">
                     <input type="hidden" id="stock-id">
-                    <input type="text" id="s-name" placeholder="ชื่อวัตถุดิบ (เช่น แก้ว 16oz, ผงชาเขียว)" class="p-3 border-2 rounded-xl w-1/2 outline-none focus:border-blue-500 font-bold">
+                    <input type="text" id="s-name" placeholder="ชื่อวัตถุดิบ (เช่น แก้ว 16oz)" class="p-3 border-2 rounded-xl w-1/2 outline-none focus:border-blue-500 font-bold">
                     <input type="number" id="s-cost" placeholder="ต้นทุน/ชิ้น" class="p-3 border-2 rounded-xl w-1/4 outline-none font-bold">
                     <button onclick="saveStockItem()" class="bg-blue-600 text-white px-4 rounded-xl font-bold hover:bg-blue-500 w-1/4 text-lg">บันทึกเข้าสู่ระบบ</button>
                 </div>
             </div>
-
             <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
                 <table class="w-full text-left text-sm min-w-[600px]">
                     <thead class="bg-gray-100 border-b">
@@ -190,98 +191,11 @@
 
         <div id="admin" class="tab-content hidden p-4 max-w-6xl mx-auto space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-blue-200 relative">
-                    <h2 class="text-xl font-bold mb-4 text-blue-700">🥤 จัดการเมนูเครื่องดื่ม & ท้อปปิ้ง</h2>
-                    <div class="space-y-3 mb-4 bg-blue-50 p-4 rounded-xl border border-blue-100">
-                        <input type="hidden" id="edit-d-idx" value="-1">
-                        <input type="text" id="m-d-cat" placeholder="หมวดหมู่ (เช่น กาแฟ, ชาใส)" class="w-full border-2 p-3 rounded-lg outline-none focus:border-blue-500 font-bold">
-                        <input type="text" id="m-d-name" placeholder="ชื่อเมนู" class="w-full border-2 p-3 rounded-lg outline-none focus:border-blue-500 font-bold">
-                        <input type="number" id="m-d-price" placeholder="ราคา (บาท)" class="w-full border-2 p-3 rounded-lg outline-none focus:border-blue-500 font-bold">
-                        <label class="flex items-center text-sm font-bold text-blue-600 cursor-pointer">
-                            <input type="checkbox" id="m-d-topping" class="mr-2 w-6 h-6 rounded cursor-pointer"> 
-                            เมนูนี้คือ "ท้อปปิ้งน้ำ" (เช่น ไข่มุก)
-                        </label>
-                        <div class="flex gap-2 mt-2">
-                            <button onclick="saveMenu('drink')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-500 text-lg">💾 บันทึก</button>
-                            <button onclick="cancelMenuEdit('drink')" id="btn-cancel-drink" class="hidden bg-gray-400 text-white px-6 rounded-lg font-bold">ยกเลิก</button>
-                        </div>
-                    </div>
-                    <ul id="admin-drink-list" class="space-y-2 max-h-72 overflow-y-auto border-t pt-4 pr-2"></ul>
-                </div>
-
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-orange-200">
-                    <h2 class="text-xl font-bold mb-4 text-orange-700">🍔 จัดการเมนูอาหาร & ท้อปปิ้ง</h2>
-                    <div class="space-y-3 mb-4 bg-orange-50 p-4 rounded-xl border border-orange-100">
-                        <input type="hidden" id="edit-f-idx" value="-1">
-                        <input type="text" id="m-f-cat" placeholder="หมวดหมู่ (เช่น อาหารจานเดียว)" class="w-full border-2 p-3 rounded-lg outline-none focus:border-orange-500 font-bold">
-                        <input type="text" id="m-f-name" placeholder="ชื่ออาหาร" class="w-full border-2 p-3 rounded-lg outline-none focus:border-orange-500 font-bold">
-                        <input type="number" id="m-f-price" placeholder="ราคา (บาท)" class="w-full border-2 p-3 rounded-lg outline-none focus:border-orange-500 font-bold">
-                        <label class="flex items-center text-sm font-bold text-orange-600 cursor-pointer mt-2">
-                            <input type="checkbox" id="m-f-topping" class="mr-2 w-6 h-6 rounded cursor-pointer"> 
-                            เมนูนี้คือ "ท้อปปิ้งอาหาร" (เช่น ไข่ดาว, เพิ่มข้าว)
-                        </label>
-                        <div class="flex gap-2 mt-2">
-                            <button onclick="saveMenu('food')" class="w-full bg-orange-600 text-white py-3 rounded-lg font-bold hover:bg-orange-500 text-lg">💾 บันทึกอาหาร</button>
-                            <button onclick="cancelMenuEdit('food')" id="btn-cancel-food" class="hidden bg-gray-400 text-white px-6 rounded-lg font-bold">ยกเลิก</button>
-                        </div>
-                    </div>
-                    <ul id="admin-food-list" class="space-y-2 max-h-72 overflow-y-auto border-t pt-4 pr-2"></ul>
-                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-blue-200 relative"><h2 class="text-xl font-bold mb-4 text-blue-700">🥤 จัดการเมนูเครื่องดื่ม & ท้อปปิ้ง</h2><div class="space-y-3 mb-4 bg-blue-50 p-4 rounded-xl border border-blue-100"><input type="hidden" id="edit-d-idx" value="-1"><input type="text" id="m-d-cat" placeholder="หมวดหมู่" class="w-full border-2 p-3 rounded-lg outline-none focus:border-blue-500 font-bold"><input type="text" id="m-d-name" placeholder="ชื่อเมนู" class="w-full border-2 p-3 rounded-lg outline-none focus:border-blue-500 font-bold"><input type="number" id="m-d-price" placeholder="ราคา (บาท)" class="w-full border-2 p-3 rounded-lg outline-none focus:border-blue-500 font-bold"><label class="flex items-center text-sm font-bold text-blue-600 cursor-pointer"><input type="checkbox" id="m-d-topping" class="mr-2 w-6 h-6 rounded cursor-pointer"> ท้อปปิ้งน้ำ</label><div class="flex gap-2 mt-2"><button onclick="saveMenu('drink')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-500 text-lg">💾 บันทึก</button><button onclick="cancelMenuEdit('drink')" id="btn-cancel-drink" class="hidden bg-gray-400 text-white px-6 rounded-lg font-bold">ยกเลิก</button></div></div><ul id="admin-drink-list" class="space-y-2 max-h-72 overflow-y-auto border-t pt-4 pr-2"></ul></div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-orange-200"><h2 class="text-xl font-bold mb-4 text-orange-700">🍔 จัดการเมนูอาหาร & ท้อปปิ้ง</h2><div class="space-y-3 mb-4 bg-orange-50 p-4 rounded-xl border border-orange-100"><input type="hidden" id="edit-f-idx" value="-1"><input type="text" id="m-f-cat" placeholder="หมวดหมู่" class="w-full border-2 p-3 rounded-lg outline-none focus:border-orange-500 font-bold"><input type="text" id="m-f-name" placeholder="ชื่ออาหาร" class="w-full border-2 p-3 rounded-lg outline-none focus:border-orange-500 font-bold"><input type="number" id="m-f-price" placeholder="ราคา (บาท)" class="w-full border-2 p-3 rounded-lg outline-none focus:border-orange-500 font-bold"><label class="flex items-center text-sm font-bold text-orange-600 cursor-pointer mt-2"><input type="checkbox" id="m-f-topping" class="mr-2 w-6 h-6 rounded cursor-pointer"> ท้อปปิ้งอาหาร</label><div class="flex gap-2 mt-2"><button onclick="saveMenu('food')" class="w-full bg-orange-600 text-white py-3 rounded-lg font-bold hover:bg-orange-500 text-lg">💾 บันทึกอาหาร</button><button onclick="cancelMenuEdit('food')" id="btn-cancel-food" class="hidden bg-gray-400 text-white px-6 rounded-lg font-bold">ยกเลิก</button></div></div><ul id="admin-food-list" class="space-y-2 max-h-72 overflow-y-auto border-t pt-4 pr-2"></ul></div>
             </div>
-
-            <div class="bg-white p-6 rounded-2xl shadow-sm border mt-6">
-                <h2 class="text-xl font-bold mb-4 text-gray-800">⚙️ ตั้งค่าระบบร้าน</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-gray-50 p-4 rounded-xl border">
-                        <label class="block text-sm font-bold text-red-600 mb-2">🔒 รหัส PIN ลบบิล/แก้ไขบิล (สำหรับแอดมิน)</label>
-                        <input type="password" id="set-pin" class="w-full border-2 p-3 rounded-lg font-bold text-xl text-center tracking-widest outline-none focus:border-red-500" placeholder="เช่น 123">
-                    </div>
-                    <div class="bg-gray-50 p-4 rounded-xl border">
-                        <label class="block text-sm font-bold text-green-600 mb-2">🎁 โปรโมชั่นสะสมแต้ม</label>
-                        <div class="flex gap-2 items-center">
-                            <input type="number" id="set-target" placeholder="กี่แต้ม?" class="w-1/3 border-2 p-3 rounded-lg font-bold text-center outline-none focus:border-green-500">
-                            <span class="font-bold text-gray-500">แต้ม แลก</span>
-                            <input type="text" id="set-reward" placeholder="ของรางวัล" class="w-full border-2 p-3 rounded-lg font-bold outline-none focus:border-green-500">
-                        </div>
-                    </div>
-                </div>
-                <button onclick="saveSystemSettings()" class="mt-4 bg-gray-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-700 w-full md:w-auto active:scale-95 transition">บันทึกการตั้งค่าระบบ</button>
-            </div>
-            
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-purple-200 mt-6">
-                <h2 class="text-xl font-bold mb-4 text-purple-800">👥 จัดการบัญชีพนักงาน (ตั้งสิทธิ์การเข้าถึง)</h2>
-                <div class="bg-purple-50 p-5 rounded-xl border border-purple-100 mb-6">
-                    <input type="hidden" id="old-u-id">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-                        <input type="text" id="u-id" placeholder="ID (2 หลัก)" maxlength="2" class="border-2 p-3 rounded-lg font-bold text-center text-xl outline-none focus:border-purple-500">
-                        <input type="password" id="u-pass" placeholder="Pass (3 หลัก)" maxlength="3" class="border-2 p-3 rounded-lg font-bold text-center text-xl outline-none focus:border-purple-500">
-                        <input type="text" id="u-name" placeholder="ชื่อพนักงาน" class="border-2 p-3 rounded-lg font-bold outline-none focus:border-purple-500 md:col-span-2">
-                    </div>
-                    <div class="mb-4 bg-white p-3 rounded-lg border">
-                        <p class="font-bold text-sm mb-3 text-gray-700 border-b pb-1">ติ๊กเลือกสิทธิ์การเข้าถึงเมนู:</p>
-                        <div class="flex flex-wrap gap-4 text-sm font-bold text-gray-600">
-                            <label class="cursor-pointer hover:text-blue-600"><input type="checkbox" id="p-pos" class="mr-2 w-4 h-4"> หน้าร้าน</label>
-                            <label class="cursor-pointer hover:text-blue-600"><input type="checkbox" id="p-dash" class="mr-2 w-4 h-4"> ยอดขาย</label>
-                            <label class="cursor-pointer hover:text-blue-600"><input type="checkbox" id="p-stock" class="mr-2 w-4 h-4"> สต๊อก</label>
-                            <label class="cursor-pointer hover:text-blue-600"><input type="checkbox" id="p-crm" class="mr-2 w-4 h-4"> สมาชิก</label>
-                            <label class="cursor-pointer hover:text-blue-600"><input type="checkbox" id="p-admin" class="mr-2 w-4 h-4"> หลังร้าน</label>
-                            <label class="cursor-pointer text-red-600"><input type="checkbox" id="p-del" class="mr-2 w-4 h-4"> สิทธิ์ลบ/แก้บิล</label>
-                            <label class="font-bold text-purple-700 ml-auto border-l-2 border-purple-200 pl-4 cursor-pointer"><input type="checkbox" id="p-all" onchange="toggleAllPerms(this)" class="mr-2 w-4 h-4"> ☑️ เลือกทั้งหมด</label>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="saveUser()" class="bg-purple-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-purple-500 text-lg active:scale-95 transition">บันทึกพนักงาน</button>
-                        <button onclick="cancelUserEdit()" class="bg-gray-400 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-500 text-lg active:scale-95 transition">เคลียร์ฟอร์ม</button>
-                    </div>
-                </div>
-                
-                <div class="overflow-x-auto border rounded-xl">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-gray-100 border-b"><tr><th class="p-3">ID</th><th class="p-3">ชื่อ</th><th class="p-3">สิทธิ์ที่ได้รับ</th><th class="p-3 text-center">จัดการ</th></tr></thead>
-                        <tbody id="user-list"></tbody>
-                    </table>
-                </div>
-            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border mt-6"><h2 class="text-xl font-bold mb-4 text-gray-800">⚙️ ตั้งค่าระบบร้าน</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="bg-gray-50 p-4 rounded-xl border"><label class="block text-sm font-bold text-red-600 mb-2">🔒 รหัส PIN ลบบิล/แก้ไขบิล</label><input type="password" id="set-pin" class="w-full border-2 p-3 rounded-lg font-bold text-xl text-center tracking-widest outline-none focus:border-red-500" placeholder="เช่น 123"></div><div class="bg-gray-50 p-4 rounded-xl border"><label class="block text-sm font-bold text-green-600 mb-2">🎁 โปรโมชั่นสะสมแต้ม</label><div class="flex gap-2 items-center"><input type="number" id="set-target" placeholder="กี่แต้ม?" class="w-1/3 border-2 p-3 rounded-lg font-bold text-center outline-none focus:border-green-500"><span class="font-bold text-gray-500">แต้ม แลก</span><input type="text" id="set-reward" placeholder="ของรางวัล" class="w-full border-2 p-3 rounded-lg font-bold outline-none focus:border-green-500"></div></div></div><button onclick="saveSystemSettings()" class="mt-4 bg-gray-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-700 w-full md:w-auto active:scale-95 transition">บันทึกการตั้งค่าระบบ</button></div>
+             <div class="bg-white p-6 rounded-2xl shadow-sm border border-purple-200 mt-6"><h2 class="text-xl font-bold mb-4 text-purple-800">👥 จัดการบัญชีพนักงาน (ตั้งสิทธิ์การเข้าถึง)</h2><div class="bg-purple-50 p-5 rounded-xl border border-purple-100 mb-6"><input type="hidden" id="old-u-id"><div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4"><input type="text" id="u-id" placeholder="ID (2 หลัก)" maxlength="2" class="border-2 p-3 rounded-lg font-bold text-center text-xl outline-none focus:border-purple-500"><input type="password" id="u-pass" placeholder="Pass (3 หลัก)" maxlength="3" class="border-2 p-3 rounded-lg font-bold text-center text-xl outline-none focus:border-purple-500"><input type="text" id="u-name" placeholder="ชื่อพนักงาน" class="border-2 p-3 rounded-lg font-bold outline-none focus:border-purple-500 md:col-span-2"></div><div class="mb-4 bg-white p-3 rounded-lg border"><p class="font-bold text-sm mb-3 text-gray-700 border-b pb-1">ติ๊กเลือกสิทธิ์การเข้าถึงเมนู:</p><div class="flex flex-wrap gap-4 text-sm font-bold text-gray-600"><label class="cursor-pointer hover:text-blue-600"><input type="checkbox" id="p-pos" class="mr-2 w-4 h-4"> หน้าร้าน</label><label class="cursor-pointer hover:text-blue-600"><input type="checkbox" id="p-dash" class="mr-2 w-4 h-4"> ยอดขาย</label><label class="cursor-pointer hover:text-blue-600"><input type="checkbox" id="p-stock" class="mr-2 w-4 h-4"> สต๊อก</label><label class="cursor-pointer hover:text-blue-600"><input type="checkbox" id="p-crm" class="mr-2 w-4 h-4"> สมาชิก</label><label class="cursor-pointer hover:text-blue-600"><input type="checkbox" id="p-admin" class="mr-2 w-4 h-4"> หลังร้าน</label><label class="cursor-pointer text-red-600"><input type="checkbox" id="p-del" class="mr-2 w-4 h-4"> สิทธิ์ลบ/แก้บิล</label><label class="font-bold text-purple-700 ml-auto border-l-2 border-purple-200 pl-4 cursor-pointer"><input type="checkbox" id="p-all" onchange="toggleAllPerms(this)" class="mr-2 w-4 h-4"> ☑️ เลือกทั้งหมด</label></div></div><div class="flex gap-2"><button onclick="saveUser()" class="bg-purple-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-purple-500 text-lg active:scale-95 transition">บันทึกพนักงาน</button><button onclick="cancelUserEdit()" class="bg-gray-400 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-500 text-lg active:scale-95 transition">เคลียร์ฟอร์ม</button></div></div><div class="overflow-x-auto border rounded-xl"><table class="w-full text-sm text-left"><thead class="bg-gray-100 border-b"><tr><th class="p-3">ID</th><th class="p-3">ชื่อ</th><th class="p-3">สิทธิ์ที่ได้รับ</th><th class="p-3 text-center">จัดการ</th></tr></thead><tbody id="user-list"></tbody></table></div></div>
         </div>
     </div>
 
@@ -318,12 +232,12 @@
 
     <div id="modal-edit-sale" class="fixed inset-0 bg-black bg-opacity-60 hidden justify-center items-center z-50 p-4">
         <div class="bg-white p-6 rounded-3xl w-[700px] max-w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
-            <h3 class="text-2xl font-bold text-orange-600 mb-4 border-b-2 border-dashed pb-2">✏️ แก้ไขบิลย้อนหลัง</h3>
+            <h3 id="es-modal-title" class="text-2xl font-bold text-orange-600 mb-4 border-b-2 border-dashed pb-2">✏️ แก้ไขบิลย้อนหลัง</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="block font-bold text-gray-600 text-sm mb-1">📅 วันที่และเวลาสั่งซื้อ</label>
-                    <input type="datetime-local" id="es-date" class="w-full p-3 border-2 rounded-xl font-bold outline-none focus:border-orange-500 bg-gray-50">
+                    <input type="datetime-local" id="es-date" class="w-full p-3 border-2 rounded-xl font-bold outline-none focus:border-orange-500 bg-gray-50 text-blue-700">
                 </div>
                 <div>
                     <label class="block font-bold text-gray-600 text-sm mb-1">📱 เบอร์โทรลูกค้า (สะสมแต้ม)</label>
@@ -341,24 +255,33 @@
             <div class="bg-orange-50 p-4 rounded-xl border border-orange-200 mb-4">
                 <h4 class="font-bold text-orange-800 mb-2">➕ เพิ่มรายการใหม่เข้าไปในบิลนี้</h4>
                 <div class="flex flex-col md:flex-row gap-2">
-                    <select id="es-new-item" onchange="autoFillEditPrice()" class="w-full md:w-2/5 p-3 border-2 rounded-xl font-bold outline-none cursor-pointer">
+                    <select id="es-new-item" onchange="autoFillEditPrice()" class="w-full md:w-2/5 p-3 border-2 rounded-xl font-bold outline-none cursor-pointer text-sm">
                         <option value="">-- เลือกเมนู --</option>
                     </select>
-                    <input type="number" id="es-new-price" placeholder="ราคา (บ.)" class="w-full md:w-1/5 p-3 border-2 rounded-xl font-bold outline-none">
-                    <input type="text" id="es-new-note" placeholder="หมายเหตุ/หวาน/ท้อปปิ้ง" class="w-full md:w-2/5 p-3 border-2 rounded-xl font-bold outline-none text-sm">
-                    <button onclick="addEditSaleItem()" class="bg-orange-600 text-white px-4 py-3 rounded-xl font-bold hover:bg-orange-500 whitespace-nowrap">เพิ่ม</button>
+                    <input type="number" id="es-new-price" placeholder="ราคา (บ.)" class="w-full md:w-1/5 p-3 border-2 rounded-xl font-bold outline-none text-sm">
+                    <button onclick="addEditSaleItem()" class="w-full md:w-1/5 bg-orange-600 text-white px-2 py-3 rounded-xl font-bold hover:bg-orange-500 text-sm">เพิ่มลงบิล</button>
+                </div>
+                <div class="flex flex-col md:flex-row gap-2 mt-2">
+                    <select id="es-new-sweet" class="w-full md:w-1/3 p-3 border-2 rounded-xl font-bold outline-none text-sm cursor-pointer">
+                        <option value="">-ไม่ระบุความหวาน-</option>
+                        <option value="หวานมาก 150%">หวานมาก 150%</option>
+                        <option value="ปกติ 100%">ปกติ 100%</option>
+                        <option value="หวานน้อย 50%">หวานน้อย 50%</option>
+                        <option value="ไม่หวาน 0%">ไม่หวาน 0%</option>
+                    </select>
+                    <input type="text" id="es-new-note" placeholder="หมายเหตุ / ท้อปปิ้งที่ต้องการพิมพ์เอง" class="w-full md:w-2/3 p-3 border-2 rounded-xl font-bold outline-none text-sm">
                 </div>
             </div>
 
-            <h4 class="font-bold text-gray-700 mb-2">🛒 รายการสินค้าในบิล (ลบออกได้)</h4>
-            <div id="es-item-list" class="space-y-2 mb-4 bg-gray-50 p-3 rounded-xl border min-h-[100px] max-h-48 overflow-y-auto"></div>
+            <h4 class="font-bold text-gray-700 mb-2">🛒 รายการสินค้าในบิล (สามารถปรับแก้ได้ทันที)</h4>
+            <div id="es-item-list" class="flex flex-col mb-4 bg-gray-50 rounded-xl border min-h-[100px] max-h-60 overflow-y-auto"></div>
 
             <div class="border-t-2 border-dashed pt-4 font-bold flex justify-between text-2xl text-orange-700 mb-6">
                 <span>ยอดรวมใหม่:</span> <span><span id="es-total">0</span> ฿</span>
             </div>
 
             <div class="flex gap-3">
-                <button onclick="confirmEditSale()" class="w-2/3 bg-orange-600 text-white py-4 rounded-xl font-bold text-xl hover:bg-orange-500 active:scale-95 transition shadow-lg">💾 บันทึกการแก้ไข</button>
+                <button onclick="confirmEditSale()" class="w-2/3 bg-orange-600 text-white py-4 rounded-xl font-bold text-xl hover:bg-orange-500 active:scale-95 transition shadow-lg">💾 บันทึกรายการ</button>
                 <button onclick="closeModal('modal-edit-sale')" class="w-1/3 bg-gray-300 text-gray-700 py-4 rounded-xl font-bold text-lg hover:bg-gray-400 active:scale-95 transition">ยกเลิก</button>
             </div>
         </div>
@@ -391,10 +314,11 @@
         let sysSettings = { pin: "123", promoTarget: 10, promoReward: "ฟรี 1 สิทธิ์" };
         let tempItemOpts = null; let tempAction = null; let salesChartObj = null; let currentPosMode = 'drink';
         
-        // ตัวแปรสำหรับ Edit Sale
+        // ตัวแปรสำหรับ Edit / Create Retro Sale
         let editSaleTargetId = null; 
         let editSaleItems = []; 
         let editSaleOldInfo = null;
+        let isCreateRetroMode = false;
 
         // ------------------ 1. Login & Auth ------------------
         async function login() {
@@ -438,146 +362,79 @@
         }
 
         // ------------------ 3. POS & Cart ------------------
-        function showPOS(type) {
-            showTab('pos'); currentPosMode = type;
-            document.getElementById('pos-title').innerText = type === 'food' ? '🍔 เมนูอาหาร' : '🥤 เมนูเครื่องดื่ม';
-            document.getElementById('nav-food').classList.remove('bg-orange-600'); document.getElementById('nav-drink').classList.remove('bg-blue-600');
-            if(type === 'food') { document.getElementById('nav-food').classList.add('bg-orange-600'); document.getElementById('nav-food').classList.remove('bg-blue-900'); } else { document.getElementById('nav-drink').classList.add('bg-blue-600'); document.getElementById('nav-drink').classList.remove('bg-blue-900'); }
-            renderPOSMenu();
-        }
-
-        function renderPOSMenu() {
-            const con = document.getElementById('menu-container'); con.innerHTML = '';
-            let list = menuItems.filter(m => (m.type || 'drink') === currentPosMode);
-            const cats = [...new Set(list.map(m => m.c))];
-            
-            cats.forEach(cat => {
-                const items = list.filter(m => m.c === cat); let color = currentPosMode === 'food' ? 'orange' : 'blue';
-                let html = `<div class="mb-6"><h3 class="font-bold text-xl mb-3 text-gray-700 border-l-4 border-${color}-500 pl-3">${cat}</h3><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">`;
-                items.forEach(m => { html += `<div onclick="clickMenuItem('${m.n}', ${m.p}, '${m.type || currentPosMode}')" class="bg-white p-5 rounded-2xl shadow-sm border-2 border-transparent hover:border-${color}-400 active:scale-95 cursor-pointer flex flex-col justify-between transition"><p class="font-bold text-gray-800 text-lg leading-tight mb-2">${m.n}</p><p class="text-${color}-600 font-bold text-right text-xl">${m.p}.-</p></div>`; });
-                con.innerHTML += html + `</div></div>`;
-            });
-
-            const topDiv = document.getElementById('opt-toppings'); topDiv.innerHTML = '';
-            let targetToppingType = currentPosMode === 'food' ? 'food_topping' : 'drink_topping';
-            let toppings = menuItems.filter(m => m.type === targetToppingType || (currentPosMode === 'drink' && m.type === 'topping'));
-            toppings.forEach(t => { topDiv.innerHTML += `<label class="flex justify-between items-center p-4 bg-white border-2 rounded-xl hover:border-blue-400 cursor-pointer font-bold transition"><div class="flex items-center"><input type="checkbox" class="chk-topping mr-3 w-6 h-6 rounded text-blue-600 cursor-pointer" value="${t.n}|${t.p}"><span class="text-lg">${t.n}</span></div><span class="text-gray-500 text-lg">+${t.p}฿</span></label>`; });
-        }
-
+        function showPOS(type) { showTab('pos'); currentPosMode = type; document.getElementById('pos-title').innerText = type === 'food' ? '🍔 เมนูอาหาร' : '🥤 เมนูเครื่องดื่ม'; document.getElementById('nav-food').classList.remove('bg-orange-600'); document.getElementById('nav-drink').classList.remove('bg-blue-600'); if(type === 'food') { document.getElementById('nav-food').classList.add('bg-orange-600'); document.getElementById('nav-food').classList.remove('bg-blue-900'); } else { document.getElementById('nav-drink').classList.add('bg-blue-600'); document.getElementById('nav-drink').classList.remove('bg-blue-900'); } renderPOSMenu(); }
+        function renderPOSMenu() { const con = document.getElementById('menu-container'); con.innerHTML = ''; let list = menuItems.filter(m => (m.type || 'drink') === currentPosMode); const cats = [...new Set(list.map(m => m.c))]; cats.forEach(cat => { const items = list.filter(m => m.c === cat); let color = currentPosMode === 'food' ? 'orange' : 'blue'; let html = `<div class="mb-6"><h3 class="font-bold text-xl mb-3 text-gray-700 border-l-4 border-${color}-500 pl-3">${cat}</h3><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">`; items.forEach(m => { html += `<div onclick="clickMenuItem('${m.n}', ${m.p}, '${m.type || currentPosMode}')" class="bg-white p-5 rounded-2xl shadow-sm border-2 border-transparent hover:border-${color}-400 active:scale-95 cursor-pointer flex flex-col justify-between transition"><p class="font-bold text-gray-800 text-lg leading-tight mb-2">${m.n}</p><p class="text-${color}-600 font-bold text-right text-xl">${m.p}.-</p></div>`; }); con.innerHTML += html + `</div></div>`; }); const topDiv = document.getElementById('opt-toppings'); topDiv.innerHTML = ''; let targetToppingType = currentPosMode === 'food' ? 'food_topping' : 'drink_topping'; let toppings = menuItems.filter(m => m.type === targetToppingType || (currentPosMode === 'drink' && m.type === 'topping')); toppings.forEach(t => { topDiv.innerHTML += `<label class="flex justify-between items-center p-4 bg-white border-2 rounded-xl hover:border-blue-400 cursor-pointer font-bold transition"><div class="flex items-center"><input type="checkbox" class="chk-topping mr-3 w-6 h-6 rounded text-blue-600 cursor-pointer" value="${t.n}|${t.p}"><span class="text-lg">${t.n}</span></div><span class="text-gray-500 text-lg">+${t.p}฿</span></label>`; }); }
         function updateSweetUI(selectedLabel) { document.querySelectorAll('.sweet-label').forEach(lbl => { lbl.classList.remove('bg-blue-100', 'border-blue-500', 'text-blue-800'); lbl.classList.add('border-gray-200'); }); selectedLabel.classList.remove('border-gray-200'); selectedLabel.classList.add('bg-blue-100', 'border-blue-500', 'text-blue-800'); }
-        function clickMenuItem(name, price, itemType) {
-            tempItemOpts = { n: name, p: price, type: itemType }; document.getElementById('opt-name').innerText = name; document.querySelectorAll('.chk-topping').forEach(c => c.checked = false); document.getElementById('opt-note').value = ''; 
-            if(itemType === 'food') { document.getElementById('sec-sweet').classList.add('hidden'); } else { document.getElementById('sec-sweet').classList.remove('hidden'); let normalInput = document.querySelector('input[name="sweet"][value="หวานปกติ 100%"]'); normalInput.checked = true; updateSweetUI(normalInput.parentElement); }
-            openModal('modal-options');
-        }
-
-        function confirmOptions() {
-            let sweet = ''; if(tempItemOpts.type === 'drink') { let checkedSweet = document.querySelector('input[name="sweet"]:checked'); sweet = checkedSweet ? checkedSweet.value : 'ปกติ 100%'; }
-            let tops = []; let addPrice = 0; let note = document.getElementById('opt-note').value.trim(); 
-            document.querySelectorAll('.chk-topping:checked').forEach(c => { let [tn, tp] = c.value.split('|'); tops.push(tn); addPrice += parseInt(tp); });
-            cart.push({ cartId: Date.now(), n: tempItemOpts.n, p: tempItemOpts.p + addPrice, basePrice: tempItemOpts.p, type: tempItemOpts.type, sweet: sweet, toppings: tops, note: note });
-            updateCartUI(); closeModal('modal-options');
-        }
-
+        function clickMenuItem(name, price, itemType) { tempItemOpts = { n: name, p: price, type: itemType }; document.getElementById('opt-name').innerText = name; document.querySelectorAll('.chk-topping').forEach(c => c.checked = false); document.getElementById('opt-note').value = ''; if(itemType === 'food') { document.getElementById('sec-sweet').classList.add('hidden'); } else { document.getElementById('sec-sweet').classList.remove('hidden'); let normalInput = document.querySelector('input[name="sweet"][value="หวานปกติ 100%"]'); normalInput.checked = true; updateSweetUI(normalInput.parentElement); } openModal('modal-options'); }
+        function confirmOptions() { let sweet = ''; if(tempItemOpts.type === 'drink') { let checkedSweet = document.querySelector('input[name="sweet"]:checked'); sweet = checkedSweet ? checkedSweet.value : 'ปกติ 100%'; } let tops = []; let addPrice = 0; let note = document.getElementById('opt-note').value.trim(); document.querySelectorAll('.chk-topping:checked').forEach(c => { let [tn, tp] = c.value.split('|'); tops.push(tn); addPrice += parseInt(tp); }); cart.push({ cartId: Date.now(), n: tempItemOpts.n, p: tempItemOpts.p + addPrice, basePrice: tempItemOpts.p, type: tempItemOpts.type, sweet: sweet, toppings: tops, note: note }); updateCartUI(); closeModal('modal-options'); }
         function removeCart(id) { cart = cart.filter(i => i.cartId !== id); updateCartUI(); }
         function clearCart() { cart = []; updateCartUI(); }
-        function updateCartUI() {
-            const area = document.getElementById('cart'); let t = 0; area.innerHTML = '';
-            cart.forEach(it => {
-                t += it.p; let ex = [];
-                if(it.type === 'drink' && it.sweet && it.sweet !== 'N/A') ex.push(`<span class="text-blue-600">${it.sweet}</span>`);
-                if(it.toppings && it.toppings.length) ex.push(`<span class="text-gray-500">+${it.toppings.join(', ')}</span>`);
-                if(it.note) ex.push(`<span class="text-red-500 font-bold">[${it.note}]</span>`);
-                let subtxt = ex.length ? `<span class="text-sm block mt-1 leading-snug">${ex.join(' | ')}</span>` : '';
-                area.innerHTML += `<div class="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 mb-2 shadow-sm"><div class="w-3/4"><span class="text-lg font-bold text-gray-800">${it.n}</span>${subtxt}</div><div class="flex items-center"><b class="mr-3 text-blue-700 text-xl">${it.p}.-</b><button onclick="removeCart(${it.cartId})" class="text-red-500 font-bold w-10 h-10 bg-red-100 rounded-full hover:bg-red-200 flex justify-center items-center text-lg active:scale-95 transition">✕</button></div></div>`;
-            }); document.getElementById('total').innerText = t;
-        }
-
-        async function checkout(method) {
-            if(!cart.length) return alert('กรุณาเลือกเมนูก่อนครับ');
-            const btnC = document.getElementById('btn-cash'); const btnT = document.getElementById('btn-transfer'); btnC.disabled = true; btnT.disabled = true;
-            try {
-                let ph = document.getElementById('custPhone').value.trim(); const totalBaht = parseInt(document.getElementById('total').innerText);
-                let cups = cart.filter(i => i.type === 'drink').length; let plates = cart.filter(i => i.type === 'food').length;
-                let drinkTotal = cart.filter(i => i.type === 'drink').reduce((s, i) => s + i.p, 0); let foodTotal = cart.filter(i => i.type === 'food').reduce((s, i) => s + i.p, 0);
-                let totalItems = cups + plates; 
-                
-                await db.collection("sales").add({ time: firebase.firestore.FieldValue.serverTimestamp(), items: cart, total: totalBaht, cups: cups, plates: plates, drinkTotal: drinkTotal, foodTotal: foodTotal, phone: ph || '-', seller: currentUser.name, method: method });
-                if(ph && totalItems > 0) { const memRef = db.collection("members").doc(ph); await db.runTransaction(async (t) => { const doc = await t.get(memRef); const d = doc.exists ? doc.data() : { pts: 0, life: 0, hist: [] }; t.set(memRef, { pts: (d.pts||0) + totalItems, life: (d.life||0) + totalItems }, { merge: true }); }); }
-                alert(`✅ บันทึกยอดขายและรับเงิน (${method}) สำเร็จ!`); clearCart(); document.getElementById('custPhone').value = '';
-            } catch (e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
-            btnC.disabled = false; btnT.disabled = false;
-        }
+        function updateCartUI() { const area = document.getElementById('cart'); let t = 0; area.innerHTML = ''; cart.forEach(it => { t += it.p; let ex = []; if(it.type === 'drink' && it.sweet && it.sweet !== 'N/A') ex.push(`<span class="text-blue-600">${it.sweet}</span>`); if(it.toppings && it.toppings.length) ex.push(`<span class="text-gray-500">+${it.toppings.join(', ')}</span>`); if(it.note) ex.push(`<span class="text-red-500 font-bold">[${it.note}]</span>`); let subtxt = ex.length ? `<span class="text-sm block mt-1 leading-snug">${ex.join(' | ')}</span>` : ''; area.innerHTML += `<div class="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 mb-2 shadow-sm"><div class="w-3/4"><span class="text-lg font-bold text-gray-800">${it.n}</span>${subtxt}</div><div class="flex items-center"><b class="mr-3 text-blue-700 text-xl">${it.p}.-</b><button onclick="removeCart(${it.cartId})" class="text-red-500 font-bold w-10 h-10 bg-red-100 rounded-full hover:bg-red-200 flex justify-center items-center text-lg active:scale-95 transition">✕</button></div></div>`; }); document.getElementById('total').innerText = t; }
+        async function checkout(method) { if(!cart.length) return alert('กรุณาเลือกเมนูก่อนครับ'); const btnC = document.getElementById('btn-cash'); const btnT = document.getElementById('btn-transfer'); btnC.disabled = true; btnT.disabled = true; try { let ph = document.getElementById('custPhone').value.trim(); const totalBaht = parseInt(document.getElementById('total').innerText); let cups = cart.filter(i => i.type === 'drink').length; let plates = cart.filter(i => i.type === 'food').length; let drinkTotal = cart.filter(i => i.type === 'drink').reduce((s, i) => s + i.p, 0); let foodTotal = cart.filter(i => i.type === 'food').reduce((s, i) => s + i.p, 0); let totalItems = cups + plates; await db.collection("sales").add({ time: firebase.firestore.FieldValue.serverTimestamp(), items: cart, total: totalBaht, cups: cups, plates: plates, drinkTotal: drinkTotal, foodTotal: foodTotal, phone: ph || '-', seller: currentUser.name, method: method }); if(ph && totalItems > 0) { const memRef = db.collection("members").doc(ph); await db.runTransaction(async (t) => { const doc = await t.get(memRef); const d = doc.exists ? doc.data() : { pts: 0, life: 0, hist: [] }; t.set(memRef, { pts: (d.pts||0) + totalItems, life: (d.life||0) + totalItems }, { merge: true }); }); } alert(`✅ บันทึกยอดขายและรับเงิน (${method}) สำเร็จ!`); clearCart(); document.getElementById('custPhone').value = ''; } catch (e) { alert('เกิดข้อผิดพลาด: ' + e.message); } btnC.disabled = false; btnT.disabled = false; }
 
         // ------------------ 4. Dashboard & Graph ------------------
         function toggleDateFilter() { const v = document.getElementById('timeFilter').value; const d = document.getElementById('customDate'); if(v === 'custom') d.classList.remove('hidden'); else { d.classList.add('hidden'); d.value = ''; applyFilter(); } }
-        function applyFilter() {
-            if(!currentUser.p.dash) return; const filter = document.getElementById('timeFilter').value; const now = new Date();
-            let start = new Date(now.getFullYear(), now.getMonth(), now.getDate()); let end = new Date(start.getTime() + 86400000); 
-            if(filter === 'yesterday') { end = start; start = new Date(start.getTime() - 86400000); } else if(filter === 'thisWeek') { const day = now.getDay() || 7; start = new Date(start.getTime() - (day - 1) * 86400000); end = now; } else if(filter === 'thisMonth') { start = new Date(now.getFullYear(), now.getMonth(), 1); end = now; } else if(filter === 'all') { start = new Date(2000,0,1); end = new Date(2100,0,1); } else if(filter === 'custom') { const dateVal = document.getElementById('customDate').value; if(!dateVal) return; const parts = dateVal.split('-'); start = new Date(parts[0], parts[1]-1, parts[2]); end = new Date(start.getTime() + 86400000); }
-            const data = allSales.filter(s => s.dateObj >= start && s.dateObj < end); renderDash(data); updateChart(data);
-        }
-        function renderDash(data) {
-            const l = document.getElementById('log'); l.innerHTML = '';
-            let sumM = 0, sumCash = 0, sumTrans = 0; let sumDrinkM = 0, sumDrinkC = 0, sumDrinkCash = 0, sumDrinkTrans = 0; let sumFoodM = 0, sumFoodC = 0, sumFoodCash = 0, sumFoodTrans = 0; let itemCounts = {}; 
-            data.forEach(s => {
-                let isCash = (s.method === 'เงินสด'); sumM += s.total; if(isCash) sumCash += s.total; else sumTrans += s.total;
-                let cCups = s.cups || 0, cPlates = s.plates || 0, cDrinkM = s.drinkTotal || 0, cFoodM = s.foodTotal || 0;
-                if(s.cups === undefined && s.plates === undefined) { s.items.forEach(i => { if(i.type === 'food') { cPlates++; cFoodM += i.p; } else { cCups++; cDrinkM += i.p; } }); }
-                sumDrinkC += cCups; sumFoodC += cPlates; sumDrinkM += cDrinkM; sumFoodM += cFoodM;
-                if(isCash) { sumDrinkCash += cDrinkM; sumFoodCash += cFoodM; } else { sumDrinkTrans += cDrinkM; sumFoodTrans += cFoodM; }
-                s.items.forEach(i => { itemCounts[i.n] = (itemCounts[i.n]||0) + 1; });
-                let tStr = s.dateObj.toLocaleString('th-TH', { day: '2-digit', month: 'short', year:'2-digit', hour: '2-digit', minute: '2-digit' });
-                let itemsTxt = s.items.map(i => { let txt = `<span class="font-bold text-gray-800">${i.n}</span>`; let ex = []; if(i.type === 'drink') { let swt = (i.sweet && i.sweet !== '') ? i.sweet : 'N/A'; if(swt !== 'N/A') ex.push(`<span class="text-blue-600">${swt}</span>`); } if(i.toppings && i.toppings.length) ex.push(`<span class="text-gray-500">+${i.toppings.join('+')}</span>`); if(i.note) ex.push(`<span class="text-red-500">[${i.note}]</span>`); return ex.length ? `${txt} <span class="text-xs">(${ex.join(', ')})</span>` : txt; }).join('<br>');
-                
-                // เพิ่มปุ่มแก้ไขบิล
-                l.innerHTML += `<tr class="border-b hover:bg-gray-50 transition"><td class="p-3 text-xs text-gray-500 whitespace-nowrap">${tStr}</td><td class="p-3 text-sm">${itemsTxt}</td><td class="p-3 text-xs font-bold">${s.phone}</td><td class="p-3 text-xs text-gray-500">👤 ${s.seller}</td><td class="p-3 text-xs font-bold ${s.method === 'เงินสด' ? 'text-green-600' : 'text-blue-600'}">${s.method}</td><td class="p-3 font-bold text-right text-gray-800 text-lg">${s.total}</td><td class="p-3 text-center whitespace-nowrap"><button onclick="reqAction('edit', '${s.id}')" class="text-yellow-600 bg-yellow-50 px-2 py-1 rounded-lg text-xs font-bold hover:bg-yellow-200 transition border border-yellow-200 mr-1 shadow-sm">✏️ แก้ไข</button><button onclick="reqAction('delete', '${s.id}')" class="text-red-500 bg-red-50 px-2 py-1 rounded-lg text-xs font-bold hover:bg-red-200 transition border border-red-100 shadow-sm">🗑️ ลบ</button></td></tr>`;
-            });
-            document.getElementById('sum-m').innerText = sumM.toLocaleString(); document.getElementById('sum-cash').innerText = sumCash.toLocaleString(); document.getElementById('sum-transfer').innerText = sumTrans.toLocaleString();
-            document.getElementById('sum-d-m').innerText = sumDrinkM.toLocaleString(); document.getElementById('sum-d-c').innerText = sumDrinkC.toLocaleString(); document.getElementById('sum-d-cash').innerText = sumDrinkCash.toLocaleString(); document.getElementById('sum-d-trans').innerText = sumDrinkTrans.toLocaleString();
-            document.getElementById('sum-f-m').innerText = sumFoodM.toLocaleString(); document.getElementById('sum-f-c').innerText = sumFoodC.toLocaleString(); document.getElementById('sum-f-cash').innerText = sumFoodCash.toLocaleString(); document.getElementById('sum-f-trans').innerText = sumFoodTrans.toLocaleString();
-            let topArr = Object.entries(itemCounts).sort((a,b) => b[1] - a[1]).slice(0,5); document.getElementById('top5-list').innerHTML = topArr.map((v,i) => `<li class="flex justify-between items-center bg-orange-50 p-2 rounded-lg border border-orange-100"><span class="font-bold text-gray-800">${i+1}. ${v[0]}</span> <span class="bg-orange-500 text-white px-2 py-1 rounded text-xs font-bold">${v[1]} ออเดอร์</span></li>`).join('');
-        }
+        function applyFilter() { if(!currentUser.p.dash) return; const filter = document.getElementById('timeFilter').value; const now = new Date(); let start = new Date(now.getFullYear(), now.getMonth(), now.getDate()); let end = new Date(start.getTime() + 86400000); if(filter === 'yesterday') { end = start; start = new Date(start.getTime() - 86400000); } else if(filter === 'thisWeek') { const day = now.getDay() || 7; start = new Date(start.getTime() - (day - 1) * 86400000); end = now; } else if(filter === 'thisMonth') { start = new Date(now.getFullYear(), now.getMonth(), 1); end = now; } else if(filter === 'all') { start = new Date(2000,0,1); end = new Date(2100,0,1); } else if(filter === 'custom') { const dateVal = document.getElementById('customDate').value; if(!dateVal) return; const parts = dateVal.split('-'); start = new Date(parts[0], parts[1]-1, parts[2]); end = new Date(start.getTime() + 86400000); } const data = allSales.filter(s => s.dateObj >= start && s.dateObj < end); renderDash(data); updateChart(data); }
+        function renderDash(data) { const l = document.getElementById('log'); l.innerHTML = ''; let sumM = 0, sumCash = 0, sumTrans = 0; let sumDrinkM = 0, sumDrinkC = 0, sumDrinkCash = 0, sumDrinkTrans = 0; let sumFoodM = 0, sumFoodC = 0, sumFoodCash = 0, sumFoodTrans = 0; let itemCounts = {}; data.forEach(s => { let isCash = (s.method === 'เงินสด'); sumM += s.total; if(isCash) sumCash += s.total; else sumTrans += s.total; let cCups = s.cups || 0, cPlates = s.plates || 0, cDrinkM = s.drinkTotal || 0, cFoodM = s.foodTotal || 0; if(s.cups === undefined && s.plates === undefined) { s.items.forEach(i => { if(i.type === 'food') { cPlates++; cFoodM += i.p; } else { cCups++; cDrinkM += i.p; } }); } sumDrinkC += cCups; sumFoodC += cPlates; sumDrinkM += cDrinkM; sumFoodM += cFoodM; if(isCash) { sumDrinkCash += cDrinkM; sumFoodCash += cFoodM; } else { sumDrinkTrans += cDrinkM; sumFoodTrans += cFoodM; } s.items.forEach(i => { itemCounts[i.n] = (itemCounts[i.n]||0) + 1; }); let tStr = s.dateObj.toLocaleString('th-TH', { day: '2-digit', month: 'short', year:'2-digit', hour: '2-digit', minute: '2-digit' }); let itemsTxt = s.items.map(i => { let txt = `<span class="font-bold text-gray-800">${i.n}</span>`; let ex = []; if(i.type === 'drink') { let swt = (i.sweet && i.sweet !== '') ? i.sweet : 'N/A'; if(swt !== 'N/A') ex.push(`<span class="text-blue-600">${swt}</span>`); } if(i.toppings && i.toppings.length) ex.push(`<span class="text-gray-500">+${i.toppings.join('+')}</span>`); if(i.note) ex.push(`<span class="text-red-500">[${i.note}]</span>`); return ex.length ? `${txt} <span class="text-xs">(${ex.join(', ')})</span>` : txt; }).join('<br>'); l.innerHTML += `<tr class="border-b hover:bg-gray-50 transition"><td class="p-3 text-xs text-gray-500 whitespace-nowrap">${tStr}</td><td class="p-3 text-sm">${itemsTxt}</td><td class="p-3 text-xs font-bold">${s.phone}</td><td class="p-3 text-xs text-gray-500">👤 ${s.seller}</td><td class="p-3 text-xs font-bold ${s.method === 'เงินสด' ? 'text-green-600' : 'text-blue-600'}">${s.method}</td><td class="p-3 font-bold text-right text-gray-800 text-lg">${s.total}</td><td class="p-3 text-center whitespace-nowrap"><button onclick="reqAction('edit', '${s.id}')" class="text-yellow-600 bg-yellow-50 px-2 py-1 rounded-lg text-xs font-bold hover:bg-yellow-200 transition border border-yellow-200 mr-1 shadow-sm">✏️ แก้ไข</button><button onclick="reqAction('delete', '${s.id}')" class="text-red-500 bg-red-50 px-2 py-1 rounded-lg text-xs font-bold hover:bg-red-200 transition border border-red-100 shadow-sm">🗑️ ลบ</button></td></tr>`; }); document.getElementById('sum-m').innerText = sumM.toLocaleString(); document.getElementById('sum-cash').innerText = sumCash.toLocaleString(); document.getElementById('sum-transfer').innerText = sumTrans.toLocaleString(); document.getElementById('sum-d-m').innerText = sumDrinkM.toLocaleString(); document.getElementById('sum-d-c').innerText = sumDrinkC.toLocaleString(); document.getElementById('sum-d-cash').innerText = sumDrinkCash.toLocaleString(); document.getElementById('sum-d-trans').innerText = sumDrinkTrans.toLocaleString(); document.getElementById('sum-f-m').innerText = sumFoodM.toLocaleString(); document.getElementById('sum-f-c').innerText = sumFoodC.toLocaleString(); document.getElementById('sum-f-cash').innerText = sumFoodCash.toLocaleString(); document.getElementById('sum-f-trans').innerText = sumFoodTrans.toLocaleString(); let topArr = Object.entries(itemCounts).sort((a,b) => b[1] - a[1]).slice(0,5); document.getElementById('top5-list').innerHTML = topArr.map((v,i) => `<li class="flex justify-between items-center bg-orange-50 p-2 rounded-lg border border-orange-100"><span class="font-bold text-gray-800">${i+1}. ${v[0]}</span> <span class="bg-orange-500 text-white px-2 py-1 rounded text-xs font-bold">${v[1]} ออเดอร์</span></li>`).join(''); }
         function updateChart(data) { const ctx = document.getElementById('salesChart').getContext('2d'); let hCups = Array(24).fill(0); let hPlates = Array(24).fill(0); data.forEach(s => { let hr = s.dateObj.getHours(); if(s.cups !== undefined) hCups[hr] += s.cups; if(s.plates !== undefined) hPlates[hr] += s.plates; if(s.cups === undefined && s.plates === undefined) { s.items.forEach(i => { if(i.type === 'food') hPlates[hr]++; else hCups[hr]++; }); } }); if(salesChartObj) salesChartObj.destroy(); salesChartObj = new Chart(ctx, { type: 'line', data: { labels: Array.from({length:24}, (_,i) => `${i}:00`), datasets: [ { label: '🥤 เครื่องดื่ม (แก้ว)', data: hCups, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#3b82f6' }, { label: '🍔 อาหาร (จาน)', data: hPlates, borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#f97316' } ] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false } } }); }
         
         // --- Admin Functions for PIN & Actions ---
         function reqAction(actionType, id) { 
-            if(currentUser.p.del) { if(actionType === 'delete') executeDeleteSale(id); else initEditSale(id); } 
-            else { tempAction = () => { if(actionType === 'delete') executeDeleteSale(id); else initEditSale(id); }; openModal('modal-pin'); } 
+            if(currentUser.p.del) { 
+                if(actionType === 'delete') executeDeleteSale(id); 
+                else if(actionType === 'createRetro') initCreateRetroSale();
+                else initEditSale(id); 
+            } else { 
+                tempAction = () => { 
+                    if(actionType === 'delete') executeDeleteSale(id); 
+                    else if(actionType === 'createRetro') initCreateRetroSale();
+                    else initEditSale(id); 
+                }; 
+                openModal('modal-pin'); 
+            } 
         }
         function verifyPinAndExecute() { const pin = document.getElementById('override-pin').value; if(pin === sysSettings.pin) { closeModal('modal-pin'); if(tempAction) tempAction(); } else alert('❌ รหัส PIN ผู้ดูแลไม่ถูกต้อง!'); document.getElementById('override-pin').value = ''; }
-        
-        async function executeDeleteSale(id) { 
-            if(!confirm("⚠️ ยืนยันการลบบิลนี้อย่างถาวร? (ระบบจะหักแต้มสะสมคืนโดยอัตโนมัติ)")) return; 
-            const doc = await db.collection("sales").doc(id).get(); if(!doc.exists) return; const data = doc.data(); 
-            await db.collection("sales").doc(id).delete(); 
-            if(data.phone && data.phone !== '-') { const memRef = db.collection("members").doc(data.phone); await db.runTransaction(async t => { const md = await t.get(memRef); if(md.exists) { let totalItems = (data.cups||0) + (data.plates||0); let p = md.data().pts - totalItems; let l = md.data().life - totalItems; t.update(memRef, { pts: p < 0 ? 0 : p, life: l < 0 ? 0 : l }); } }); } 
-            alert('✅ ลบบิลและหักแต้มคืนเรียบร้อยแล้ว'); 
+        async function executeDeleteSale(id) { if(!confirm("⚠️ ยืนยันการลบบิลนี้อย่างถาวร? (ระบบจะหักแต้มสะสมคืนโดยอัตโนมัติ)")) return; const doc = await db.collection("sales").doc(id).get(); if(!doc.exists) return; const data = doc.data(); await db.collection("sales").doc(id).delete(); if(data.phone && data.phone !== '-') { const memRef = db.collection("members").doc(data.phone); await db.runTransaction(async t => { const md = await t.get(memRef); if(md.exists) { let totalItems = (data.cups||0) + (data.plates||0); let p = md.data().pts - totalItems; let l = md.data().life - totalItems; t.update(memRef, { pts: p < 0 ? 0 : p, life: l < 0 ? 0 : l }); } }); } alert('✅ ลบบิลและหักแต้มคืนเรียบร้อยแล้ว'); }
+
+        // ================= EDIT / CREATE RETRO SALE LOGIC =================
+        function getLocalDatetime(date) { const tzOffset = (new Date()).getTimezoneOffset() * 60000; return (new Date(date.getTime() - tzOffset)).toISOString().slice(0, 16); }
+
+        function populateEditMenuDropdown() {
+            const sel = document.getElementById('es-new-item');
+            sel.innerHTML = '<option value="">-- เลือกเมนู --</option>';
+            menuItems.forEach(m => { sel.innerHTML += `<option value="${m.n}|${m.p}|${m.type||'drink'}">${m.n} (${m.p}฿)</option>`; });
         }
 
-        // ================= NEW: EDIT SALE LOGIC =================
-        function getLocalDatetime(date) {
-            const tzOffset = (new Date()).getTimezoneOffset() * 60000;
-            return (new Date(date.getTime() - tzOffset)).toISOString().slice(0, 16);
+        function initCreateRetroSale() {
+            isCreateRetroMode = true;
+            editSaleTargetId = null;
+            editSaleOldInfo = null;
+            editSaleItems = [];
+            
+            document.getElementById('es-modal-title').innerHTML = '➕ คีย์บิลย้อนหลัง (สร้างบิลใหม่)';
+            document.getElementById('es-date').value = getLocalDatetime(new Date());
+            document.getElementById('es-phone').value = '';
+            document.getElementById('es-method').value = 'เงินสด';
+            
+            populateEditMenuDropdown();
+            renderEditSaleItems();
+            openModal('modal-edit-sale');
         }
 
         function initEditSale(id) {
             const sale = allSales.find(s => s.id === id);
             if(!sale) return;
+            isCreateRetroMode = false;
             editSaleTargetId = id;
-            editSaleOldInfo = JSON.parse(JSON.stringify(sale)); // Clone object
-            editSaleItems = JSON.parse(JSON.stringify(sale.items)); // Clone items
+            editSaleOldInfo = JSON.parse(JSON.stringify(sale));
+            editSaleItems = JSON.parse(JSON.stringify(sale.items));
             
-            // Set Form Data
+            document.getElementById('es-modal-title').innerHTML = '✏️ แก้ไขบิลย้อนหลัง';
             document.getElementById('es-date').value = getLocalDatetime(sale.dateObj);
             document.getElementById('es-phone').value = sale.phone === '-' ? '' : sale.phone;
             document.getElementById('es-method').value = sale.method;
             
-            // Populate menu dropdown
-            const sel = document.getElementById('es-new-item');
-            sel.innerHTML = '<option value="">-- เลือกเมนูเพื่อเพิ่ม --</option>';
-            menuItems.forEach(m => { sel.innerHTML += `<option value="${m.n}|${m.p}|${m.type||'drink'}">${m.n} (${m.p}฿)</option>`; });
-
+            populateEditMenuDropdown();
             renderEditSaleItems();
             openModal('modal-edit-sale');
         }
@@ -596,32 +453,60 @@
             let p = parseInt(document.getElementById('es-new-price').value);
             if(isNaN(p)) p = parseInt(baseP);
             const note = document.getElementById('es-new-note').value.trim();
+            const sweet = document.getElementById('es-new-sweet').value;
             
-            editSaleItems.push({ cartId: Date.now(), n: n, p: p, basePrice: parseInt(baseP), type: type, sweet: '', toppings: [], note: note });
+            let finalSweet = sweet;
+            if (type === 'drink' && !finalSweet) finalSweet = 'ปกติ 100%';
+            else if (type !== 'drink') finalSweet = '';
+
+            editSaleItems.push({ cartId: Date.now(), n: n, p: p, basePrice: parseInt(baseP), type: type, sweet: finalSweet, toppings: [], note: note });
             
-            // Reset fields
-            document.getElementById('es-new-item').value = ''; document.getElementById('es-new-price').value = ''; document.getElementById('es-new-note').value = '';
+            document.getElementById('es-new-item').value = ''; document.getElementById('es-new-price').value = ''; document.getElementById('es-new-note').value = ''; document.getElementById('es-new-sweet').value = '';
             renderEditSaleItems();
         }
 
         function removeEditSaleItem(idx) { editSaleItems.splice(idx, 1); renderEditSaleItems(); }
+        
+        function editItemProp(idx, prop, val) {
+            if(prop === 'p') { val = parseInt(val); if(isNaN(val)) val = editSaleItems[idx].basePrice || 0; }
+            editSaleItems[idx][prop] = val;
+            renderEditSaleItems();
+        }
 
         function renderEditSaleItems() {
             const list = document.getElementById('es-item-list'); list.innerHTML = '';
             let t = 0;
             editSaleItems.forEach((it, idx) => {
                 t += it.p;
-                let txt = it.n;
-                if(it.sweet && it.sweet !== 'N/A') txt += ` <span class="text-blue-600 text-sm">(${it.sweet})</span>`;
-                if(it.toppings && it.toppings.length) txt += ` <span class="text-gray-500 text-sm">(+${it.toppings.join(',')})</span>`;
-                if(it.note) txt += ` <span class="text-red-500 text-sm font-bold">[${it.note}]</span>`;
-                list.innerHTML += `<div class="flex justify-between items-center bg-white p-2 border-b"><span class="font-bold text-gray-800">${txt}</span><div class="flex items-center"><b class="text-blue-700 mr-3">${it.p}฿</b><button onclick="removeEditSaleItem(${idx})" class="text-red-500 bg-red-100 px-2 rounded-md font-bold hover:bg-red-200">✕</button></div></div>`;
+                let sweetSelect = '';
+                if(it.type === 'drink') {
+                    const sweets = ['หวานมาก 150%', 'ปกติ 100%', 'หวานน้อย 50%', 'ไม่หวาน 0%', 'N/A'];
+                    sweetSelect = `<select onchange="editItemProp(${idx}, 'sweet', this.value)" class="flex-1 text-xs p-2 border border-blue-200 rounded outline-none bg-white text-blue-700 font-bold shadow-sm">
+                        <option value="">-ความหวาน-</option>
+                        ${sweets.map(s => `<option value="${s}" ${it.sweet === s ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select>`;
+                }
+                
+                list.innerHTML += `
+                <div class="flex flex-col bg-white p-3 border-b border-gray-200 gap-2 hover:bg-gray-50 transition">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-gray-800">${it.n} ${it.toppings && it.toppings.length ? `<span class="text-gray-500 text-xs">(+${it.toppings.join(',')})</span>` : ''}</span>
+                        <div class="flex items-center gap-2">
+                            <input type="number" onchange="editItemProp(${idx}, 'p', this.value)" value="${it.p}" class="w-16 p-1 border rounded text-right font-bold text-blue-700 outline-none shadow-sm"> ฿
+                            <button onclick="removeEditSaleItem(${idx})" class="text-red-500 bg-red-50 px-3 py-1 rounded-md font-bold hover:bg-red-200 transition">✕</button>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 w-full">
+                        ${sweetSelect}
+                        <input type="text" onchange="editItemProp(${idx}, 'note', this.value)" value="${it.note || ''}" placeholder="หมายเหตุ / ท้อปปิ้ง" class="flex-[2] text-xs p-2 border border-gray-200 rounded outline-none text-red-500 font-bold shadow-sm">
+                    </div>
+                </div>`;
             });
             document.getElementById('es-total').innerText = t;
         }
 
         async function confirmEditSale() {
-            if(editSaleItems.length === 0) return alert('บิลต้องมีสินค้าอย่างน้อย 1 รายการ หากต้องการลบให้ใช้ปุ่ม "ลบ" แทนครับ');
+            if(editSaleItems.length === 0) return alert('บิลต้องมีสินค้าอย่างน้อย 1 รายการ');
             
             const dateStr = document.getElementById('es-date').value;
             const phone = document.getElementById('es-phone').value.trim() || '-';
@@ -630,7 +515,6 @@
             if(!dateStr) return alert('กรุณาเลือกวันที่และเวลา');
             const newDate = new Date(dateStr);
             
-            // Calculate new totals
             let tBaht = 0; let nCups = 0; let nPlates = 0; let drinkTotal = 0; let foodTotal = 0;
             editSaleItems.forEach(i => {
                 tBaht += i.p;
@@ -638,49 +522,59 @@
                 else { nPlates++; foodTotal += i.p; }
             });
             let newTotalItems = nCups + nPlates;
-            
-            let oldPhone = editSaleOldInfo.phone || '-';
-            let oldTotalItems = (editSaleOldInfo.cups || 0) + (editSaleOldInfo.plates || 0);
-            if(!editSaleOldInfo.cups && !editSaleOldInfo.plates) oldTotalItems = editSaleOldInfo.items.length; // fallback old data
 
             try {
-                // 1. Update Sale Document
-                await db.collection("sales").doc(editSaleTargetId).update({
-                    time: firebase.firestore.Timestamp.fromDate(newDate),
-                    items: editSaleItems, total: tBaht, cups: nCups, plates: nPlates, drinkTotal: drinkTotal, foodTotal: foodTotal, phone: phone, method: method
-                });
-
-                // 2. Deal with Member Points Logic (Super tricky part!)
-                if (oldPhone !== phone) {
-                    // Changed phone entirely! Deduct from old, add to new.
-                    if (oldPhone !== '-') {
-                        const oldMemRef = db.collection("members").doc(oldPhone);
-                        await db.runTransaction(async t => { const md = await t.get(oldMemRef); if(md.exists) { let p = md.data().pts - oldTotalItems; let l = md.data().life - oldTotalItems; t.update(oldMemRef, { pts: Math.max(0, p), life: Math.max(0, l) }); } });
-                    }
-                    if (phone !== '-') {
+                if (isCreateRetroMode) {
+                    // --- ➕ สร้างบิลย้อนหลัง (CREATE MODE) ---
+                    await db.collection("sales").add({
+                        time: firebase.firestore.Timestamp.fromDate(newDate),
+                        items: editSaleItems, total: tBaht, cups: nCups, plates: nPlates, drinkTotal: drinkTotal, foodTotal: foodTotal, phone: phone, method: method, seller: currentUser.name + ' (คีย์ย้อนหลัง)'
+                    });
+                    
+                    if(phone !== '-') {
                         const newMemRef = db.collection("members").doc(phone);
                         await db.runTransaction(async t => { const doc = await t.get(newMemRef); const d = doc.exists ? doc.data() : { pts: 0, life: 0, hist: [] }; t.set(newMemRef, { pts: (d.pts||0) + newTotalItems, life: (d.life||0) + newTotalItems }, { merge: true }); });
                     }
-                } else if (oldPhone === phone && phone !== '-') {
-                    // Same phone, just adjust the difference
-                    const diff = newTotalItems - oldTotalItems;
-                    if (diff !== 0) {
-                        const memRef = db.collection("members").doc(phone);
-                        await db.runTransaction(async t => { const md = await t.get(memRef); if(md.exists) { let p = md.data().pts + diff; let l = md.data().life + diff; t.update(memRef, { pts: Math.max(0, p), life: Math.max(0, l) }); } });
+                    alert('✅ สร้างบิลย้อนหลังและให้แต้มสำเร็จ!');
+                } else {
+                    // --- ✏️ แก้ไขบิลเดิม (EDIT MODE) ---
+                    let oldPhone = editSaleOldInfo.phone || '-';
+                    let oldTotalItems = (editSaleOldInfo.cups || 0) + (editSaleOldInfo.plates || 0);
+                    if(!editSaleOldInfo.cups && !editSaleOldInfo.plates) oldTotalItems = editSaleOldInfo.items.length;
+
+                    await db.collection("sales").doc(editSaleTargetId).update({
+                        time: firebase.firestore.Timestamp.fromDate(newDate),
+                        items: editSaleItems, total: tBaht, cups: nCups, plates: nPlates, drinkTotal: drinkTotal, foodTotal: foodTotal, phone: phone, method: method
+                    });
+
+                    // คำนวณแต้มสะสม
+                    if (oldPhone !== phone) {
+                        if (oldPhone !== '-') {
+                            const oldMemRef = db.collection("members").doc(oldPhone);
+                            await db.runTransaction(async t => { const md = await t.get(oldMemRef); if(md.exists) { let p = md.data().pts - oldTotalItems; let l = md.data().life - oldTotalItems; t.update(oldMemRef, { pts: Math.max(0, p), life: Math.max(0, l) }); } });
+                        }
+                        if (phone !== '-') {
+                            const newMemRef = db.collection("members").doc(phone);
+                            await db.runTransaction(async t => { const doc = await t.get(newMemRef); const d = doc.exists ? doc.data() : { pts: 0, life: 0, hist: [] }; t.set(newMemRef, { pts: (d.pts||0) + newTotalItems, life: (d.life||0) + newTotalItems }, { merge: true }); });
+                        }
+                    } else if (oldPhone === phone && phone !== '-') {
+                        const diff = newTotalItems - oldTotalItems;
+                        if (diff !== 0) {
+                            const memRef = db.collection("members").doc(phone);
+                            await db.runTransaction(async t => { const md = await t.get(memRef); if(md.exists) { let p = md.data().pts + diff; let l = md.data().life + diff; t.update(memRef, { pts: Math.max(0, p), life: Math.max(0, l) }); } });
+                        }
                     }
+                    alert('✅ บันทึกการแก้ไขบิลเรียบร้อยแล้ว!');
                 }
 
-                alert('✅ บันทึกการแก้ไขบิลเรียบร้อยแล้ว!');
                 closeModal('modal-edit-sale');
-                applyFilter(); // refresh dashboard
+                applyFilter(); // รีเฟรชหน้า
             } catch(e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
         }
 
-        // ------------------ Other functions (CRM, Admin, etc.) ------------------
-        // โค้ดส่วนจัดการสมาชิกและหลังร้าน ยังคงเหมือนเดิมครบถ้วน 
+        // โค้ดส่วนอื่นๆ คงเดิมครับ
         async function searchPoints() { const p = document.getElementById('fPhone').value.trim(); if(!p) return alert('กรุณากรอกเบอร์โทร'); const doc = await db.collection("members").doc(p).get(); const resArea = document.getElementById('member-result'); const rwZone = document.getElementById('reward-zone'); resArea.classList.remove('hidden'); resArea.classList.add('flex'); if (doc.exists) { const data = doc.data(); const pts = data.pts || 0; document.getElementById('crm-pts').innerText = pts; document.getElementById('crm-lifetime').innerText = data.life || 0; if(pts >= sysSettings.promoTarget) { rwZone.innerHTML = `<button onclick="claimReward('${p}')" class="bg-green-600 text-white px-8 py-4 rounded-xl font-bold text-2xl w-full hover:bg-green-500 shadow-xl active:scale-95 transition border-4 border-green-400">🎁 กดรับสิทธิ์: ${sysSettings.promoReward} (หัก ${sysSettings.promoTarget} แต้ม)</button>`; } else { rwZone.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200 font-bold text-lg">⚠️ ขาดอีก ${sysSettings.promoTarget - pts} แต้ม จึงจะสามารถแลกได้</div>`; } const histList = document.getElementById('crm-history'); histList.innerHTML = ''; if(data.hist && data.hist.length > 0) { [...data.hist].reverse().forEach(h => { let d = h.date.toDate ? h.date.toDate().toLocaleString('th-TH',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : ''; histList.innerHTML += `<li class="border-b border-gray-200 pb-2"><span class="text-gray-500 text-xs block mb-1">📅 ${d}</span><span class="font-bold text-gray-800">✅ แลกรับ: <span class="text-blue-600">${h.reward}</span></span></li>`; }); } else histList.innerHTML = '<li class="text-gray-400 italic text-center py-4">ยังไม่เคยมีประวัติการแลกของรางวัล</li>'; } else { document.getElementById('crm-pts').innerText = "0"; document.getElementById('crm-lifetime').innerText = "0"; rwZone.innerHTML = ''; document.getElementById('crm-history').innerHTML = '<li class="text-gray-400 text-center py-4">ไม่พบประวัติลูกค้าเบอร์นี้ (ระบบจะเริ่มนับแต้มเมื่อซื้อครั้งแรก)</li>'; } }
         async function claimReward(phone) { if(!confirm(`ยืนยันการหัก ${sysSettings.promoTarget} แต้ม เพื่อแลก ${sysSettings.promoReward}?`)) return; const ref = db.collection("members").doc(phone); await db.runTransaction(async t => { const doc = await t.get(ref); const d = doc.data(); let newHist = d.hist || []; newHist.push({ date: new Date(), reward: sysSettings.promoReward, used: sysSettings.promoTarget }); t.update(ref, { pts: d.pts - sysSettings.promoTarget, hist: newHist }); }); alert('🎉 ทำรายการแลกสิทธิ์สำเร็จ!'); searchPoints(); }
-
         async function saveSystemSettings() { let pin = document.getElementById('set-pin').value; let target = parseInt(document.getElementById('set-target').value); let rw = document.getElementById('set-reward').value; if(!pin || isNaN(target) || !rw) return alert('กรอกข้อมูลการตั้งค่าให้ครบถ้วน'); await db.collection("settings").doc("system").set({ pin: pin, promoTarget: target, promoReward: rw }, {merge:true}); alert('✅ บันทึกการตั้งค่าระบบสำเร็จ'); }
         function toggleAllPerms(el) { ['p-pos','p-dash','p-stock','p-crm','p-admin','p-del'].forEach(id => document.getElementById(id).checked = el.checked); }
         function cancelUserEdit() { document.getElementById('old-u-id').value = ''; document.getElementById('u-id').value = ''; document.getElementById('u-pass').value = ''; document.getElementById('u-name').value = ''; document.getElementById('p-all').checked = false; toggleAllPerms(document.getElementById('p-all')); }
@@ -689,34 +583,20 @@
         function renderUsers() { const l = document.getElementById('user-list'); l.innerHTML = ''; usersList.forEach(u => { let pStr = Object.keys(u.p).filter(k => u.p[k]).join(', '); l.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-3 font-bold text-lg text-blue-800">${u.id}</td><td class="p-3 font-bold text-gray-700">${u.name}</td><td class="p-3 text-xs text-gray-500 uppercase tracking-wider">[${pStr}]</td><td class="p-3 text-center"><button onclick="editUser('${u.id}')" class="text-blue-600 font-bold bg-blue-50 px-4 py-2 rounded-lg mr-2 border border-blue-200 hover:bg-blue-100 active:scale-95 transition">แก้ไข</button>${u.id !== '00' ? `<button onclick="deleteUser('${u.id}')" class="text-red-500 font-bold bg-red-50 px-4 py-2 rounded-lg border border-red-200 hover:bg-red-100 active:scale-95 transition">ลบ</button>` : '<span class="text-xs text-gray-400 px-4">ห้ามลบ</span>'}</td></tr>`; }); }
         async function deleteUser(id) { if(confirm('ยืนยันการลบบัญชีพนักงานคนนี้?')) await db.collection("users").doc(id).delete(); }
 
-        // Inventory
         async function saveStockItem() { const id = document.getElementById('stock-id').value; const name = document.getElementById('s-name').value.trim(); const cost = parseInt(document.getElementById('s-cost').value); if(!name || isNaN(cost)) return alert('กรุณากรอกชื่อวัตถุดิบและต้นทุนให้ถูกต้อง'); if(id) await db.collection("stock_items").doc(id).update({name, cost}); else await db.collection("stock_items").add({name, cost, qty: 0}); document.getElementById('s-name').value = ''; document.getElementById('s-cost').value = ''; document.getElementById('stock-id').value = ''; }
         function renderStock() { const list = document.getElementById('stock-list'); list.innerHTML = ''; stockItems.forEach(s => { list.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4 font-bold text-lg text-gray-800">${s.name}</td><td class="p-4 text-center text-gray-500 font-bold">${s.cost} ฿</td><td class="p-4 text-center text-3xl font-bold ${s.qty <= 10 ? 'text-red-500' : 'text-green-600'}">${s.qty}</td><td class="p-4 text-center"><div class="flex justify-center gap-2"><button onclick="openStockInOut('${s.id}','${s.name}')" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-bold hover:bg-blue-200 border border-blue-300 shadow-sm active:scale-95 transition">🔄 เบิก/ซื้อมา</button><button onclick="deleteStockForever('${s.id}')" class="bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-200 border border-red-300 shadow-sm active:scale-95 transition">🗑️ ลบถาวร</button></div></td></tr>`; }); }
         async function deleteStockForever(id) { if(confirm('⚠️ คำเตือน: ยืนยันการลบวัตถุดิบนี้ออกจากระบบอย่างถาวร?')) await db.collection("stock_items").doc(id).delete(); }
         function openStockInOut(id, name) { document.getElementById('stk-m-id').value = id; document.getElementById('stk-m-name').innerText = name; openModal('modal-stock'); }
         async function confirmStockInOut() { const id = document.getElementById('stk-m-id').value; const name = document.getElementById('stk-m-name').innerText; const type = document.getElementById('stk-m-type').value; const amt = parseInt(document.getElementById('stk-m-amt').value); const reason = document.getElementById('stk-m-reason').value.trim() || '-'; if(isNaN(amt) || amt <= 0) return alert('กรุณาใส่ตัวเลขจำนวนชิ้นให้ถูกต้อง'); const ref = db.collection("stock_items").doc(id); await db.runTransaction(async t => { const doc = await t.get(ref); let newQty = doc.data().qty + (type === 'IN' ? amt : -amt); t.update(ref, { qty: newQty }); }); await db.collection("stock_logs").add({ time: firebase.firestore.FieldValue.serverTimestamp(), itemId: id, itemName: name, type: type === 'IN' ? 'ซื้อมา' : 'เบิก', amount: amt, reason: reason, user: currentUser.name }); closeModal('modal-stock'); document.getElementById('stk-m-amt').value = ''; document.getElementById('stk-m-reason').value = ''; }
-        function exportStockExcel() { alert('หากต้องการ Export สต๊อก โปรดเปิดใช้ฟังก์ชัน Export จากโค้ดเดิม'); }
-        function exportSalesExcel() { alert('หากต้องการ Export ยอดขาย โปรดเปิดใช้ฟังก์ชัน Export จากโค้ดเดิม'); }
+        function exportStockExcel() { alert('เปิดใช้ฟังก์ชัน Export จากโค้ดเดิมได้เลยครับ'); }
+        function exportSalesExcel() { alert('เปิดใช้ฟังก์ชัน Export จากโค้ดเดิมได้เลยครับ'); }
 
-        // Admin Menu Manage
-        function renderAdminMenu() {
-            const listD = document.getElementById('admin-drink-list'); const listF = document.getElementById('admin-food-list'); listD.innerHTML = ''; listF.innerHTML = '';
-            menuItems.forEach((m, i) => {
-                let isFood = m.type === 'food' || m.type === 'food_topping'; let isTop = m.type === 'topping' || m.type === 'drink_topping' || m.type === 'food_topping'; let icon = isTop ? '🍡 ท้อปปิ้ง' : m.c;
-                let html = `<li class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 mb-2 shadow-sm hover:border-blue-300 transition"><div><span class="text-xs bg-gray-200 px-3 py-1 rounded-full mr-3 font-bold text-gray-600">${icon}</span><b class="text-lg text-gray-800">${m.n}</b></div><div class="flex items-center gap-3"><span class="font-bold text-blue-700 text-lg mr-2">${m.p}.-</span><button onclick="editMenu(${i}, '${m.type}')" class="text-yellow-600 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-lg text-sm font-bold hover:bg-yellow-100 active:scale-95 transition">✏️ แก้ไข</button><button onclick="deleteMenu(${i})" class="text-red-500 px-3 py-1 bg-red-50 border border-red-200 rounded-lg text-sm font-bold hover:bg-red-100 active:scale-95 transition">🗑️ ลบ</button></div></li>`;
-                if(isFood) listF.innerHTML += html; else listD.innerHTML += html;
-            });
-        }
-        function editMenu(idx, type) {
-            let m = menuItems[idx];
-            if(type === 'food' || type === 'food_topping') { document.getElementById('edit-f-idx').value = idx; document.getElementById('m-f-cat').value = m.c || ''; document.getElementById('m-f-name').value = m.n; document.getElementById('m-f-price').value = m.p; document.getElementById('m-f-topping').checked = (m.type === 'food_topping'); document.getElementById('btn-cancel-food').classList.remove('hidden'); } 
-            else { document.getElementById('edit-d-idx').value = idx; document.getElementById('m-d-cat').value = m.c || ''; document.getElementById('m-d-name').value = m.n; document.getElementById('m-d-price').value = m.p; document.getElementById('m-d-topping').checked = (m.type === 'drink_topping' || m.type === 'topping'); document.getElementById('btn-cancel-drink').classList.remove('hidden'); }
-        }
+        function renderAdminMenu() { const listD = document.getElementById('admin-drink-list'); const listF = document.getElementById('admin-food-list'); listD.innerHTML = ''; listF.innerHTML = ''; menuItems.forEach((m, i) => { let isFood = m.type === 'food' || m.type === 'food_topping'; let isTop = m.type === 'topping' || m.type === 'drink_topping' || m.type === 'food_topping'; let icon = isTop ? '🍡 ท้อปปิ้ง' : m.c; let html = `<li class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 mb-2 shadow-sm hover:border-blue-300 transition"><div><span class="text-xs bg-gray-200 px-3 py-1 rounded-full mr-3 font-bold text-gray-600">${icon}</span><b class="text-lg text-gray-800">${m.n}</b></div><div class="flex items-center gap-3"><span class="font-bold text-blue-700 text-lg mr-2">${m.p}.-</span><button onclick="editMenu(${i}, '${m.type}')" class="text-yellow-600 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-lg text-sm font-bold hover:bg-yellow-100 active:scale-95 transition">✏️ แก้ไข</button><button onclick="deleteMenu(${i})" class="text-red-500 px-3 py-1 bg-red-50 border border-red-200 rounded-lg text-sm font-bold hover:bg-red-100 active:scale-95 transition">🗑️ ลบ</button></div></li>`; if(isFood) listF.innerHTML += html; else listD.innerHTML += html; }); }
+        function editMenu(idx, type) { let m = menuItems[idx]; if(type === 'food' || type === 'food_topping') { document.getElementById('edit-f-idx').value = idx; document.getElementById('m-f-cat').value = m.c || ''; document.getElementById('m-f-name').value = m.n; document.getElementById('m-f-price').value = m.p; document.getElementById('m-f-topping').checked = (m.type === 'food_topping'); document.getElementById('btn-cancel-food').classList.remove('hidden'); } else { document.getElementById('edit-d-idx').value = idx; document.getElementById('m-d-cat').value = m.c || ''; document.getElementById('m-d-name').value = m.n; document.getElementById('m-d-price').value = m.p; document.getElementById('m-d-topping').checked = (m.type === 'drink_topping' || m.type === 'topping'); document.getElementById('btn-cancel-drink').classList.remove('hidden'); } }
         function cancelMenuEdit(type) { if(type === 'food') { document.getElementById('edit-f-idx').value = -1; document.getElementById('m-f-cat').value = ''; document.getElementById('m-f-name').value = ''; document.getElementById('m-f-price').value = ''; document.getElementById('m-f-topping').checked = false; document.getElementById('btn-cancel-food').classList.add('hidden'); } else { document.getElementById('edit-d-idx').value = -1; document.getElementById('m-d-cat').value = ''; document.getElementById('m-d-name').value = ''; document.getElementById('m-d-price').value = ''; document.getElementById('m-d-topping').checked = false; document.getElementById('btn-cancel-drink').classList.add('hidden'); } }
         async function saveMenu(type) { let m = {}; let idx = -1; if(type === 'food') { idx = parseInt(document.getElementById('edit-f-idx').value); let isTop = document.getElementById('m-f-topping').checked; m = { c: isTop ? 'ท้อปปิ้งอาหาร' : (document.getElementById('m-f-cat').value.trim() || 'อาหารทั่วไป'), n: document.getElementById('m-f-name').value.trim(), p: parseInt(document.getElementById('m-f-price').value), type: isTop ? 'food_topping' : 'food' }; } else { idx = parseInt(document.getElementById('edit-d-idx').value); let isTop = document.getElementById('m-d-topping').checked; m = { c: isTop ? 'ท้อปปิ้งน้ำ' : (document.getElementById('m-d-cat').value.trim() || 'เครื่องดื่มทั่วไป'), n: document.getElementById('m-d-name').value.trim(), p: parseInt(document.getElementById('m-d-price').value), type: isTop ? 'drink_topping' : 'drink' }; } if(!m.n || isNaN(m.p)) return alert('กรุณากรอกชื่อและราคาให้ครบถ้วน'); if(idx > -1) menuItems[idx] = m; else menuItems.push(m); await db.collection("settings").doc("menuData").set({items: menuItems}); cancelMenuEdit(type); alert('✅ บันทึกเมนูสำเร็จ'); }
         async function deleteMenu(idx) { if(!confirm('ยืนยันการลบเมนูนี้?')) return; menuItems.splice(idx, 1); await db.collection("settings").doc("menuData").set({items: menuItems}); }
 
-        // Utils
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
     </script>
