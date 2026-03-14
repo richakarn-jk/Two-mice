@@ -588,8 +588,75 @@
         async function deleteStockForever(id) { if(confirm('⚠️ คำเตือน: ยืนยันการลบวัตถุดิบนี้ออกจากระบบอย่างถาวร?')) await db.collection("stock_items").doc(id).delete(); }
         function openStockInOut(id, name) { document.getElementById('stk-m-id').value = id; document.getElementById('stk-m-name').innerText = name; openModal('modal-stock'); }
         async function confirmStockInOut() { const id = document.getElementById('stk-m-id').value; const name = document.getElementById('stk-m-name').innerText; const type = document.getElementById('stk-m-type').value; const amt = parseInt(document.getElementById('stk-m-amt').value); const reason = document.getElementById('stk-m-reason').value.trim() || '-'; if(isNaN(amt) || amt <= 0) return alert('กรุณาใส่ตัวเลขจำนวนชิ้นให้ถูกต้อง'); const ref = db.collection("stock_items").doc(id); await db.runTransaction(async t => { const doc = await t.get(ref); let newQty = doc.data().qty + (type === 'IN' ? amt : -amt); t.update(ref, { qty: newQty }); }); await db.collection("stock_logs").add({ time: firebase.firestore.FieldValue.serverTimestamp(), itemId: id, itemName: name, type: type === 'IN' ? 'ซื้อมา' : 'เบิก', amount: amt, reason: reason, user: currentUser.name }); closeModal('modal-stock'); document.getElementById('stk-m-amt').value = ''; document.getElementById('stk-m-reason').value = ''; }
-        function exportStockExcel() { alert('เปิดใช้ฟังก์ชัน Export จากโค้ดเดิมได้เลยครับ'); }
-        function exportSalesExcel() { alert('เปิดใช้ฟังก์ชัน Export จากโค้ดเดิมได้เลยครับ'); }
+                // ฟังก์ชันช่วยดาวน์โหลดไฟล์ CSV
+        function downloadCSV(csvContent, fileName) {
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' }); // ใส่ \uFEFF เพื่อให้ Excel อ่านภาษาไทยได้
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // โหลดประวัติยอดขาย
+        function exportSalesExcel() {
+            if (!allSales || allSales.length === 0) return alert('ไม่มีข้อมูลยอดขายสำหรับดาวน์โหลดครับ');
+            
+            // สร้าง Header ของตาราง
+            let csv = "วันที่,เวลา,รายการสินค้า (รายละเอียด),ยอดรวม (บาท),รูปแบบชำระ,เบอร์ลูกค้า,พนักงานที่ขาย\n";
+            
+            // วนลูปเอาข้อมูลยัดลงตาราง
+            allSales.forEach(s => {
+                let dStr = s.dateObj ? s.dateObj.toLocaleDateString('th-TH') : '';
+                let tStr = s.dateObj ? s.dateObj.toLocaleTimeString('th-TH') : '';
+                
+                // จัดกลุ่มรายการสินค้าในบิลให้เป็นข้อความเดียว
+                let itemsTxt = s.items.map(i => {
+                    let ex = [];
+                    if(i.type === 'drink' && i.sweet && i.sweet !== 'N/A') ex.push(i.sweet);
+                    if(i.toppings && i.toppings.length) ex.push(i.toppings.join('+'));
+                    if(i.note) ex.push(`หมายเหตุ: ${i.note}`);
+                    let detail = ex.length ? `(${ex.join(', ')})` : '';
+                    return `${i.n} ${detail}`;
+                }).join(' / ');
+                
+                itemsTxt = `"${itemsTxt}"`; // ใส่เครื่องหมายคำพูดครอบไว้ ป้องกันปัญหาเครื่องหมายลูกน้ำในข้อความตีกัน
+                
+                csv += `${dStr},${tStr},${itemsTxt},${s.total},${s.method},${s.phone},${s.seller}\n`;
+            });
+            
+            // สั่งโหลดไฟล์
+            downloadCSV(csv, `Sales_Export_${new Date().toISOString().slice(0,10)}.csv`);
+        }
+
+        // โหลดประวัติสต๊อกเข้า-ออก
+        async function exportStockExcel() {
+            try {
+                // ดึงประวัติจาก stock_logs (ดึงล่าสุด 1000 รายการ)
+                const snap = await db.collection("stock_logs").orderBy("time", "desc").limit(1000).get();
+                if (snap.empty) return alert('ยังไม่มีประวัติการเบิก/ซื้อเข้าสต๊อกครับ');
+                
+                let csv = "วันที่,เวลา,ชื่อวัตถุดิบ,ประเภทรายการ,จำนวน (ชิ้น),เหตุผล/หมายเหตุ,พนักงานที่ทำรายการ\n";
+                
+                snap.forEach(doc => {
+                    let d = doc.data();
+                    let dateObj = d.time ? d.time.toDate() : new Date();
+                    let dateStr = dateObj.toLocaleDateString('th-TH');
+                    let timeStr = dateObj.toLocaleTimeString('th-TH');
+                    let reason = d.reason ? `"${d.reason}"` : "-";
+                    
+                    csv += `${dateStr},${timeStr},${d.itemName},${d.type},${d.amount},${reason},${d.user}\n`;
+                });
+                
+                downloadCSV(csv, `Stock_History_${new Date().toISOString().slice(0,10)}.csv`);
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการโหลดข้อมูลสต๊อก: ' + e.message);
+            }
+        }
+
 
         function renderAdminMenu() { const listD = document.getElementById('admin-drink-list'); const listF = document.getElementById('admin-food-list'); listD.innerHTML = ''; listF.innerHTML = ''; menuItems.forEach((m, i) => { let isFood = m.type === 'food' || m.type === 'food_topping'; let isTop = m.type === 'topping' || m.type === 'drink_topping' || m.type === 'food_topping'; let icon = isTop ? '🍡 ท้อปปิ้ง' : m.c; let html = `<li class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 mb-2 shadow-sm hover:border-blue-300 transition"><div><span class="text-xs bg-gray-200 px-3 py-1 rounded-full mr-3 font-bold text-gray-600">${icon}</span><b class="text-lg text-gray-800">${m.n}</b></div><div class="flex items-center gap-3"><span class="font-bold text-blue-700 text-lg mr-2">${m.p}.-</span><button onclick="editMenu(${i}, '${m.type}')" class="text-yellow-600 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-lg text-sm font-bold hover:bg-yellow-100 active:scale-95 transition">✏️ แก้ไข</button><button onclick="deleteMenu(${i})" class="text-red-500 px-3 py-1 bg-red-50 border border-red-200 rounded-lg text-sm font-bold hover:bg-red-100 active:scale-95 transition">🗑️ ลบ</button></div></li>`; if(isFood) listF.innerHTML += html; else listD.innerHTML += html; }); }
         function editMenu(idx, type) { let m = menuItems[idx]; if(type === 'food' || type === 'food_topping') { document.getElementById('edit-f-idx').value = idx; document.getElementById('m-f-cat').value = m.c || ''; document.getElementById('m-f-name').value = m.n; document.getElementById('m-f-price').value = m.p; document.getElementById('m-f-topping').checked = (m.type === 'food_topping'); document.getElementById('btn-cancel-food').classList.remove('hidden'); } else { document.getElementById('edit-d-idx').value = idx; document.getElementById('m-d-cat').value = m.c || ''; document.getElementById('m-d-name').value = m.n; document.getElementById('m-d-price').value = m.p; document.getElementById('m-d-topping').checked = (m.type === 'drink_topping' || m.type === 'topping'); document.getElementById('btn-cancel-drink').classList.remove('hidden'); } }
