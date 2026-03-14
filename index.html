@@ -1,73 +1,666 @@
-// ฟังก์ชันสำหรับเข้าสู่ระบบ (อัปเดตใหม่ ทะลวงฐานข้อมูลว่าง)
-async function handleLogin() {
-    // ดึงค่าจากช่องกรอก ID และ Password (แก้ ID ของ input ให้ตรงกับ HTML ของคุณนะครับ)
-    const loginId = document.getElementById('loginIdInput').value.trim();
-    const loginPass = document.getElementById('loginPassInput').value.trim();
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two Mice POS - System</title>
+    
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
-    if (!loginId || !loginPass) {
-        alert("กรุณากรอกรหัสพนักงานและรหัสผ่านให้ครบถ้วนครับ");
-        return;
-    }
+    <style>
+        /* ================= CSS STYLING ================= */
+        :root {
+            --primary: #d63384; /* สีชมพู Two Mice */
+            --dark: #212529;
+            --light: #f8f9fa;
+            --success: #198754;
+            --info: #0dcaf0;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #e9ecef; }
+        * { box-sizing: border-box; }
+        
+        /* หน้า Login */
+        #loginScreen {
+            display: flex; height: 100vh; align-items: center; justify-content: center; background-color: var(--dark);
+        }
+        .login-box { background: white; padding: 40px; border-radius: 12px; text-align: center; width: 350px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center; }
+        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-size: 18px; cursor: pointer; font-weight: bold; }
+        .login-box button:hover { background: #b02a6c; }
 
-    // ==========================================
-    // กุญแจฉุกเฉิน: Super Admin (เข้าได้แน่นอน 100%)
-    // ==========================================
-    if (loginId === '00' && loginPass === '111') {
-        // บันทึกสถานะว่าเข้าสู่ระบบแล้วลงในเครื่อง
-        const adminData = {
-            id: '00',
-            name: 'Super Admin',
-            role: 'admin',
-            permissions: ['all'] // ให้สิทธิ์ทุกอย่าง
+        /* โครงสร้างระบบหลัก */
+        #mainSystem { display: none; height: 100vh; flex-direction: row; }
+        
+        /* เมนูด้านซ้าย (Sidebar) */
+        .sidebar { width: 250px; background: var(--dark); color: white; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; font-size: 24px; font-weight: bold; text-align: center; border-bottom: 1px solid #444; color: var(--primary); }
+        .sidebar-menu { list-style: none; padding: 0; margin: 0; }
+        .sidebar-menu li { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #333; font-size: 16px; transition: 0.2s; }
+        .sidebar-menu li:hover, .sidebar-menu li.active { background: var(--primary); }
+        .sidebar-footer { margin-top: auto; padding: 20px; font-size: 12px; text-align: center; color: #888; border-top: 1px solid #444; }
+
+        /* พื้นที่เนื้อหาหลัก */
+        .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 10; }
+        
+        /* หน้าร้าน (POS) */
+        .pos-container { display: flex; flex: 1; overflow: hidden; }
+        .menu-area { flex: 1; padding: 20px; overflow-y: auto; background: var(--light); }
+        .category-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .category-tabs button { padding: 10px 20px; border: none; border-radius: 20px; cursor: pointer; font-size: 16px; font-weight: bold; background: #ddd; }
+        .category-tabs button.active { background: var(--primary); color: white; }
+        
+        .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .menu-item { background: white; padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: transform 0.1s; }
+        .menu-item:active { transform: scale(0.95); }
+        .menu-item h4 { margin: 10px 0 5px; font-size: 16px; color: #333; }
+        .menu-item p { margin: 0; color: var(--primary); font-weight: bold; font-size: 18px; }
+
+        /* ตะกร้าสินค้า (Cart) */
+        .cart-area { width: 350px; background: white; border-left: 1px solid #ddd; display: flex; flex-direction: column; }
+        .cart-header { padding: 15px; background: #eee; font-weight: bold; font-size: 18px; text-align: center; }
+        .cart-items { flex: 1; overflow-y: auto; padding: 15px; }
+        .cart-item { display: flex; justify-content: space-between; border-bottom: 1px dashed #ccc; padding: 10px 0; font-size: 14px; }
+        .cart-item-details { display: flex; flex-direction: column; }
+        .cart-item-note { font-size: 12px; color: #d9534f; margin-top: 3px; }
+        .cart-item-remove { color: red; cursor: pointer; font-weight: bold; padding: 0 5px; }
+        .cart-footer { padding: 20px; background: #f8f9fa; border-top: 1px solid #ddd; }
+        .cart-total { display: flex; justify-content: space-between; font-size: 24px; font-weight: bold; margin-bottom: 15px; color: var(--dark); }
+        .payment-btns { display: flex; gap: 10px; }
+        .btn-pay { flex: 1; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; }
+        .btn-cash { background: var(--success); }
+        .btn-transfer { background: var(--info); }
+
+        /* Modal (ป๊อปอัปเลือก Option) */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; }
+        .modal-box { background: white; padding: 25px; border-radius: 12px; width: 400px; max-width: 90%; }
+        .modal-box h3 { margin-top: 0; color: var(--primary); }
+        .option-group { margin-bottom: 15px; }
+        .option-group label { display: block; font-weight: bold; margin-bottom: 8px; }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
+        .btn-option { padding: 8px 15px; border: 1px solid #ccc; border-radius: 20px; background: white; cursor: pointer; }
+        .btn-option.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        .note-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .modal-actions button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-cancel { background: #ccc; }
+        .btn-confirm { background: var(--primary); color: white; }
+
+        /* หน้า Dashboard & ตั้งค่า */
+        .view-section { display: none; padding: 20px; flex: 1; overflow-y: auto; background: white; }
+        .view-section.active { display: block; }
+        .card { background: var(--light); padding: 20px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        table, th, td { border: 1px solid #ddd; }
+        th, td { padding: 10px; text-align: left; }
+        th { background: #eee; }
+        .action-btn { padding: 8px 15px; background: #0d6efd; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
+        .danger-btn { background: #dc3545; }
+    </style>
+</head>
+<body>
+
+    <div id="loginScreen">
+        <div class="login-box">
+            <h2 style="color: var(--primary); margin-bottom: 20px;">🧀 Two Mice POS</h2>
+            <input type="text" id="loginId" placeholder="รหัสพนักงาน (เช่น 00)" autocomplete="off">
+            <input type="password" id="loginPass" placeholder="รหัสผ่าน (เช่น 111)">
+            <button onclick="handleLogin()">เข้าสู่ระบบ</button>
+            <p style="font-size: 12px; color: #888; margin-top: 15px;">(Super Admin: ใช้ 00 / 111 เข้าได้ทันที)</p>
+        </div>
+    </div>
+
+    <div id="mainSystem">
+        
+        <div class="sidebar">
+            <div class="sidebar-header">Two Mice POS</div>
+            <ul class="sidebar-menu">
+                <li class="active" onclick="switchView('posView', this)">🛒 หน้าร้าน (POS)</li>
+                <li onclick="switchView('dashboardView', this)">📊 ยอดขาย & ส่งออก</li>
+                <li onclick="switchView('settingsView', this)">⚙️ ตั้งค่าระบบ</li>
+                <li onclick="logout()" style="color: #ff6b6b; border-top: 1px solid #444; margin-top: 10px;">🚪 ออกจากระบบ</li>
+            </ul>
+            <div class="sidebar-footer">
+                <span id="currentUserDisplay">User: Admin</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="topbar">
+                <h3 id="topbarTitle" style="margin: 0; color: #333;">🛒 หน้าร้าน (POS)</h3>
+                <div id="clock" style="font-weight: bold; color: var(--primary);">00:00:00</div>
+            </div>
+
+            <div id="posView" class="pos-container view-section active" style="display: flex; padding: 0;">
+                
+                <div class="menu-area">
+                    <div class="category-tabs">
+                        <button class="active" onclick="filterMenu('drinks', this)">🥤 เครื่องดื่ม</button>
+                        <button onclick="filterMenu('food', this)">🍔 อาหาร</button>
+                    </div>
+                    <div class="grid-menu" id="menuGrid">
+                        </div>
+                </div>
+
+                <div class="cart-area">
+                    <div class="cart-header">ตะกร้าสินค้า</div>
+                    <div class="cart-items" id="cartItems">
+                        <div style="text-align: center; color: #999; margin-top: 50px;">ยังไม่มีสินค้าในตะกร้า</div>
+                    </div>
+                    <div class="cart-footer">
+                        <div class="cart-total">
+                            <span>ยอดรวม</span>
+                            <span id="cartTotalText">0 ฿</span>
+                        </div>
+                        <div class="payment-btns">
+                            <button class="btn-pay btn-cash" onclick="checkout('เงินสด')">💰 เงินสด</button>
+                            <button class="btn-pay btn-transfer" onclick="checkout('โอน/สแกน')">📱 โอน/สแกน</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="dashboardView" class="view-section">
+                <h2>📊 ประวัติยอดขาย</h2>
+                <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p style="margin: 0; color: #666;">ยอดขายวันนี้รวม</p>
+                        <h2 style="margin: 5px 0 0; color: var(--success);" id="todaySalesTotal">0 ฿</h2>
+                    </div>
+                    <button class="action-btn" onclick="exportSalesToExcel()">📥 ดาวน์โหลด Excel ยอดขาย</button>
+                </div>
+                
+                <div class="card">
+                    <h4>รายการบิลล่าสุด (ข้อมูลจำลองชั่วคราว)</h4>
+                    <table id="salesTable">
+                        <thead>
+                            <tr>
+                                <th>เวลา</th>
+                                <th>รายการสินค้า</th>
+                                <th>ยอดรวม (บาท)</th>
+                                <th>วิธีชำระ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salesTableBody">
+                            <tr><td colspan="4" style="text-align: center;">ยังไม่มีข้อมูลการขาย</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="settingsView" class="view-section">
+                <h2>⚙️ ตั้งค่าระบบ</h2>
+                
+                <div class="card">
+                    <h4>📦 จัดการเมนูพื้นฐาน</h4>
+                    <p style="font-size: 14px; color: #666;">โหลดชุดเมนูมาตรฐานของร้าน Two Mice (กาแฟ, ชา, นมสด, อาหาร)</p>
+                    <button class="action-btn" onclick="loadDefaultMenus()">🔄 โหลดเมนูตั้งต้น</button>
+                </div>
+
+                <div class="card">
+                    <h4>🧹 ระบบจัดการพื้นที่ฐานข้อมูล (Auto-Cleanup)</h4>
+                    <p style="font-size: 14px; color: #666;">ลบประวัติที่เก่าเกินกำหนดโดยอัตโนมัติ เพื่อป้องกันฐานข้อมูลเต็ม</p>
+                    
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                        <label>เก็บข้อมูลย้อนหลังไว้สูงสุด:</label>
+                        <input type="number" id="autoDeleteDaysInput" min="1" max="365" placeholder="90" style="width: 80px; padding: 5px; text-align: center;">
+                        <span>วัน</span>
+                        <button class="action-btn" style="margin: 0;" onclick="saveAutoDeleteSettings()">💾 บันทึกการตั้งค่า</button>
+                    </div>
+                    <hr style="border: 0; border-top: 1px solid #ddd; margin: 15px 0;">
+                    <button class="action-btn danger-btn" onclick="runDatabaseCleanup(true)">🧹 สแกนและลบข้อมูลเก่าทันที</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="optionModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="modalProductName">ชื่อสินค้า</h3>
+            <p style="color: #666; margin-top: -10px; margin-bottom: 15px;" id="modalProductPrice">ราคา: 0 ฿</p>
+
+            <div class="option-group" id="sweetnessGroup">
+                <label>ระดับความหวาน (บังคับเลือก)</label>
+                <div class="btn-group" id="sweetnessBtns">
+                    <button class="btn-option selected" onclick="selectSweetness(this, '100% (ปกติ)')">100% (ปกติ)</button>
+                    <button class="btn-option" onclick="selectSweetness(this, '150% (หวานมาก)')">150% (หวานมาก)</button>
+                    <button class="btn-option" onclick="selectSweetness(this, '50% (หวานน้อย)')">50% (หวานน้อย)</button>
+                    <button class="btn-option" onclick="selectSweetness(this, '0% (ไม่หวาน)')">0% (ไม่หวาน)</button>
+                </div>
+            </div>
+
+            <div class="option-group">
+                <label>ท้อปปิ้ง (เลือกได้หลายอย่าง)</label>
+                <div class="btn-group" id="toppingBtns">
+                    </div>
+            </div>
+
+            <div class="option-group">
+                <label>หมายเหตุเพิ่มเติม</label>
+                <input type="text" id="productNote" class="note-input" placeholder="เช่น แยกน้ำ, ไม่ใส่น้ำแข็ง">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
+                <button class="btn-confirm" onclick="confirmAddToCart()">เพิ่มลงตะกร้า</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. ตัวแปรระบบ (State) ---
+        let cart = [];
+        let currentMenuCategory = 'drinks';
+        let products = [];
+        let tempSelectedProduct = null;
+        let selectedSweetness = '100% (ปกติ)';
+        let selectedToppings = [];
+        let salesHistory = []; // เก็บประวัติการขายชั่วคราวใน Local
+
+        // --- 2. ระบบ Login ฉุกเฉิน ---
+        function handleLogin() {
+            const id = document.getElementById('loginId').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+
+            if (id === '00' && pass === '111') {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainSystem').style.display = 'flex';
+                document.getElementById('currentUserDisplay').innerText = "User: Super Admin (00)";
+                loadDefaultMenus(); // โหลดเมนูเริ่มต้นอัตโนมัติ
+                loadSalesHistory(); // โหลดประวัติ
+                startClock();
+                alert('เข้าสู่ระบบสำเร็จ! (สิทธิ์ Super Admin)');
+            } else {
+                alert('รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง\n(ทดสอบระบบใช้ ID: 00 และ Pass: 111)');
+            }
+        }
+
+        function logout() {
+            if(confirm("ต้องการออกจากระบบใช่หรือไม่?")) {
+                location.reload(); // รีเฟรชหน้าเพื่อกลับไปหน้า Login
+            }
+        }
+
+        // --- 3. ระบบนำทาง (Navigation) ---
+        function switchView(viewId, element) {
+            // ปิดทุกหน้า
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.remove('active');
+                if (el.id === 'posView') el.style.display = 'none'; // reset flex
+            });
+            // เอาแถบสีฟ้าออกจากเมนูทั้งหมด
+            document.querySelectorAll('.sidebar-menu li').forEach(el => el.classList.remove('active'));
+            
+            // เปิดหน้าที่เลือก
+            const target = document.getElementById(viewId);
+            target.classList.add('active');
+            if(viewId === 'posView') target.style.display = 'flex'; // คงรูปแบบ flex ของหน้าร้านไว้
+            
+            element.classList.add('active');
+            
+            // เปลี่ยนชื่อหัวข้อ
+            const titles = {
+                'posView': '🛒 หน้าร้าน (POS)',
+                'dashboardView': '📊 ยอดขาย & ส่งออก',
+                'settingsView': '⚙️ ตั้งค่าระบบ'
+            };
+            document.getElementById('topbarTitle').innerText = titles[viewId];
+        }
+
+        // --- นาฬิกา ---
+        function startClock() {
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('clock').innerText = now.toLocaleTimeString('th-TH');
+            }, 1000);
+        }
+
+        // --- 4. ระบบจัดการเมนูสินค้า ---
+        function loadDefaultMenus() {
+            products = [
+                // เครื่องดื่ม
+                { id: 1, name: 'ทูโทน (ดาร์กวาเลท)', price: 29, category: 'drinks' },
+                { id: 2, name: 'ทูโทน (ดาร์กคอฟฟี่)', price: 29, category: 'drinks' },
+                { id: 3, name: 'ลาเต้เย็น', price: 20, category: 'drinks' },
+                { id: 4, name: 'ชาไทยบราวชูการ์', price: 20, category: 'drinks' },
+                { id: 5, name: 'ชาเขียวธรรมดา', price: 20, category: 'drinks' },
+                { id: 6, name: 'นมสดสตอเบอร์รี่', price: 20, category: 'drinks' },
+                { id: 7, name: 'ดาร์กนมสด', price: 29, category: 'drinks' },
+                // อาหาร
+                { id: 8, name: 'ข้าวผัดหมู', price: 40, category: 'food' },
+                { id: 9, name: 'ข้าวกะเพราไก่', price: 40, category: 'food' },
+                { id: 10, name: 'มาม่าผัดขี้เมา', price: 45, category: 'food' }
+            ];
+            renderMenu();
+            alert("โหลดเมนูมาตรฐานสำเร็จ!");
+        }
+
+        function filterMenu(category, btnElement) {
+            currentMenuCategory = category;
+            document.querySelectorAll('.category-tabs button').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            renderMenu();
+        }
+
+        function renderMenu() {
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = '';
+            
+            const filteredProducts = products.filter(p => p.category === currentMenuCategory);
+            
+            filteredProducts.forEach(product => {
+                const item = document.createElement('div');
+                item.className = 'menu-item';
+                item.onclick = () => openOptionModal(product);
+                item.innerHTML = `
+                    <h4>${product.name}</h4>
+                    <p>${product.price} ฿</p>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        // --- 5. ระบบ Modal เลือกตัวเลือก (ความหวาน & ท้อปปิ้ง) ---
+        function openOptionModal(product) {
+            tempSelectedProduct = product;
+            selectedSweetness = '100% (ปกติ)'; // ค่าเริ่มต้น
+            selectedToppings = [];
+            
+            document.getElementById('modalProductName').innerText = product.name;
+            document.getElementById('modalProductPrice').innerText = `ราคา: ${product.price} ฿`;
+            document.getElementById('productNote').value = '';
+
+            // รีเซ็ตปุ่มความหวาน
+            document.querySelectorAll('#sweetnessBtns .btn-option').forEach(btn => {
+                btn.classList.remove('selected');
+                if(btn.innerText.includes('100%')) btn.classList.add('selected');
+            });
+
+            // จัดการแสดงผลความหวาน (อาหารไม่ต้องมีความหวาน)
+            const sweetnessGroup = document.getElementById('sweetnessGroup');
+            if(product.category === 'food') {
+                sweetnessGroup.style.display = 'none';
+            } else {
+                sweetnessGroup.style.display = 'block';
+            }
+
+            // จัดการท้อปปิ้งตามประเภท
+            const toppingContainer = document.getElementById('toppingBtns');
+            toppingContainer.innerHTML = '';
+            
+            const drinkToppings = [
+                { name: 'ไข่มุก', price: 5 }, { name: 'บุกใส', price: 5 }, { name: 'วิปครีม', price: 10 }
+            ];
+            const foodToppings = [
+                { name: 'ไข่ดาว', price: 10 }, { name: 'ไข่เจียว', price: 10 }, { name: 'เพิ่มข้าว', price: 5 }
+            ];
+
+            const toppingsToUse = product.category === 'drinks' ? drinkToppings : foodToppings;
+
+            toppingsToUse.forEach(top => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option';
+                btn.innerText = `${top.name} (+${top.price}฿)`;
+                btn.onclick = () => toggleTopping(btn, top);
+                toppingContainer.appendChild(btn);
+            });
+
+            document.getElementById('optionModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('optionModal').style.display = 'none';
+            tempSelectedProduct = null;
+        }
+
+        function selectSweetness(btnElement, value) {
+            document.querySelectorAll('#sweetnessBtns .btn-option').forEach(btn => btn.classList.remove('selected'));
+            btnElement.classList.add('selected');
+            selectedSweetness = value;
+        }
+
+        function toggleTopping(btnElement, toppingObj) {
+            const index = selectedToppings.findIndex(t => t.name === toppingObj.name);
+            if (index > -1) {
+                // เอาออก
+                selectedToppings.splice(index, 1);
+                btnElement.classList.remove('selected');
+            } else {
+                // เพิ่ม
+                selectedToppings.push(toppingObj);
+                btnElement.classList.add('selected');
+            }
+        }
+
+        function confirmAddToCart() {
+            const note = document.getElementById('productNote').value.trim();
+            
+            // คำนวณราคาท้อปปิ้ง
+            const toppingPrice = selectedToppings.reduce((sum, top) => sum + top.price, 0);
+            const finalPrice = tempSelectedProduct.price + toppingPrice;
+            
+            const cartItem = {
+                id: Date.now(), // Unique ID สำหรับลบ
+                productName: tempSelectedProduct.name,
+                category: tempSelectedProduct.category,
+                basePrice: tempSelectedProduct.price,
+                finalPrice: finalPrice,
+                sweetness: tempSelectedProduct.category === 'drinks' ? selectedSweetness : null,
+                toppings: selectedToppings.map(t => t.name).join(', '),
+                note: note
+            };
+
+            cart.push(cartItem);
+            renderCart();
+            closeModal();
+        }
+
+        // --- 6. ระบบตะกร้าและชำระเงิน ---
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            container.innerHTML = '';
+            
+            if (cart.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #999; margin-top: 50px;">ยังไม่มีสินค้าในตะกร้า</div>`;
+                document.getElementById('cartTotalText').innerText = `0 ฿`;
+                return;
+            }
+
+            let total = 0;
+
+            cart.forEach((item, index) => {
+                total += item.finalPrice;
+                
+                let detailText = '';
+                if(item.sweetness) detailText += `หวาน ${item.sweetness} `;
+                if(item.toppings) detailText += `+ ${item.toppings} `;
+
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                div.innerHTML = `
+                    <div class="cart-item-details">
+                        <span style="font-weight: bold;">${item.productName}</span>
+                        <span style="font-size: 12px; color: #666;">${detailText}</span>
+                        ${item.note ? `<span class="cart-item-note">หมายเหตุ: ${item.note}</span>` : ''}
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="display: block; font-weight: bold; color: var(--primary);">${item.finalPrice} ฿</span>
+                        <span class="cart-item-remove" onclick="removeFromCart(${index})">ลบ</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('cartTotalText').innerText = `${total} ฿`;
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        function checkout(paymentMethod) {
+            if(cart.length === 0) {
+                alert("ตะกร้าว่างเปล่าครับ กรุณาเลือกสินค้าก่อน");
+                return;
+            }
+
+            const totalAmount = cart.reduce((sum, item) => sum + item.finalPrice, 0);
+            
+            // สร้างบิล
+            const newBill = {
+                id: 'B' + Date.now(),
+                timestamp: new Date().getTime(),
+                dateStr: new Date().toLocaleString('th-TH'),
+                items: [...cart], // copy
+                totalAmount: totalAmount,
+                paymentMethod: paymentMethod,
+                staff: 'Super Admin'
+            };
+
+            // เซฟลง LocalStorage (จำลอง Database)
+            salesHistory.push(newBill);
+            localStorage.setItem('twomice_sales', JSON.stringify(salesHistory));
+
+            alert(`✅ ชำระเงินเรียบร้อย!\nยอดรวม: ${totalAmount} บาท\nรูปแบบ: ${paymentMethod}`);
+            
+            // เคลียร์ตะกร้าและอัปเดตหน้าประวัติ
+            cart = [];
+            renderCart();
+            loadSalesHistory();
+        }
+
+        // --- 7. ระบบหน้าประวัติและการจัดการยอดขาย ---
+        function loadSalesHistory() {
+            const savedSales = localStorage.getItem('twomice_sales');
+            if(savedSales) {
+                salesHistory = JSON.parse(savedSales);
+            }
+
+            const tbody = document.getElementById('salesTableBody');
+            tbody.innerHTML = '';
+
+            let todayTotal = 0;
+            const todayStr = new Date().toLocaleDateString('th-TH');
+
+            // เรียงจากใหม่ไปเก่า
+            const sortedHistory = [...salesHistory].sort((a,b) => b.timestamp - a.timestamp);
+
+            if(sortedHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center;">ยังไม่มีข้อมูลการขาย</td></tr>`;
+                document.getElementById('todaySalesTotal').innerText = `0 ฿`;
+                return;
+            }
+
+            sortedHistory.forEach(bill => {
+                // เช็คยอดวันนี้
+                const billDateStr = new Date(bill.timestamp).toLocaleDateString('th-TH');
+                if(billDateStr === todayStr) {
+                    todayTotal += bill.totalAmount;
+                }
+
+                // สรุปรายการในบิลเป็น Text
+                const itemsText = bill.items.map(item => item.productName).join(', ');
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${bill.dateStr}</td>
+                    <td>${itemsText} (${bill.items.length} รายการ)</td>
+                    <td style="color: var(--primary); font-weight: bold;">${bill.totalAmount}</td>
+                    <td>${bill.paymentMethod}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('todaySalesTotal').innerText = `${todayTotal} ฿`;
+        }
+
+        // --- 8. ระบบ Export Excel (SheetJS) ---
+        function exportSalesToExcel() {
+            if(salesHistory.length === 0) {
+                alert("ไม่มีข้อมูลยอดขายสำหรับสร้างไฟล์ Excel ครับ");
+                return;
+            }
+
+            // จัดเตรียมข้อมูลให้อ่านง่ายใน Excel
+            const exportData = salesHistory.map(bill => {
+                const itemsText = bill.items.map(i => `${i.productName} ${i.note ? '('+i.note+')' : ''}`).join(' + ');
+                return {
+                    "รหัสบิล": bill.id,
+                    "วัน/เวลา": bill.dateStr,
+                    "รายการสินค้า": itemsText,
+                    "จำนวน (ชิ้น)": bill.items.length,
+                    "ยอดรวม (บาท)": bill.totalAmount,
+                    "วิธีชำระเงิน": bill.paymentMethod,
+                    "พนักงานขาย": bill.staff
+                };
+            });
+
+            try {
+                const workbook = XLSX.utils.book_new();
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                
+                // ปรับขนาดคอลัมน์
+                const wscols = [
+                    {wch: 15}, {wch: 25}, {wch: 40}, {wch: 10}, {wch: 15}, {wch: 15}, {wch: 15}
+                ];
+                worksheet['!cols'] = wscols;
+
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Sales_History");
+
+                const now = new Date();
+                const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+                
+                XLSX.writeFile(workbook, `TwoMice_Sales_${dateStr}.xlsx`);
+            } catch (error) {
+                console.error("Export Error:", error);
+                alert("เกิดข้อผิดพลาดในการสร้างไฟล์ Excel");
+            }
+        }
+
+        // --- 9. ระบบลบข้อมูลอัตโนมัติ (Auto-Cleanup) ---
+        function saveAutoDeleteSettings() {
+            const input = document.getElementById('autoDeleteDaysInput').value;
+            const days = parseInt(input);
+            if(isNaN(days) || days < 1) {
+                alert("กรุณาระบุจำนวนวันให้ถูกต้อง");
+                return;
+            }
+            localStorage.setItem('twomice_cleanup_days', days);
+            alert(`บันทึกเรียบร้อย! ระบบจะลบข้อมูลที่เก่ากว่า ${days} วันโดยอัตโนมัติเมื่อเริ่มระบบ`);
+        }
+
+        function runDatabaseCleanup(forceRun = false) {
+            const keepDays = parseInt(localStorage.getItem('twomice_cleanup_days')) || 90;
+            
+            // คำนวณ Timestamp ย้อนหลัง
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - keepDays);
+            const cutoffTime = cutoffDate.getTime();
+
+            // กรองเอาเฉพาะบิลที่เวลา > cutoffTime (เก็บไว้)
+            const oldLength = salesHistory.length;
+            salesHistory = salesHistory.filter(bill => bill.timestamp >= cutoffTime);
+            const deletedCount = oldLength - salesHistory.length;
+
+            if(deletedCount > 0) {
+                localStorage.setItem('twomice_sales', JSON.stringify(salesHistory));
+                loadSalesHistory();
+                if(forceRun) alert(`เคลียร์พื้นที่สำเร็จ!\nลบข้อมูลเก่าไปจำนวน ${deletedCount} รายการ`);
+            } else {
+                if(forceRun) alert(`ฐานข้อมูลสะอาดดีครับ!\nไม่มีข้อมูลที่เก่าเกิน ${keepDays} วัน`);
+            }
+        }
+
+        // เมื่อหน้าโหลดเสร็จ ให้โหลดค่า Setting Auto-Delete มาแสดง
+        window.onload = () => {
+            const savedDays = localStorage.getItem('twomice_cleanup_days');
+            if(savedDays) {
+                document.getElementById('autoDeleteDaysInput').value = savedDays;
+            }
         };
-        localStorage.setItem('twomice_current_user', JSON.stringify(adminData));
-        
-        alert("ยินดีต้อนรับ Super Admin!");
-        
-        // สั่งซ่อนหน้า Login และแสดงหน้าจอหลัก (แก้ ID ให้ตรงกับ HTML ของคุณ)
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('mainPosScreen').style.display = 'block'; // หรือ id ของหน้าจอหลักคุณ
-        
-        // โหลดข้อมูลต่างๆ เพื่อเตรียมใช้งาน
-        // loadInitialData(); 
-        return;
-    }
 
-    // ==========================================
-    // สำหรับพนักงานคนอื่นๆ (ต้องไปเช็คใน Firebase)
-    // ==========================================
-    try {
-        if (typeof db === 'undefined') {
-            alert("ยังไม่ได้เชื่อมต่อฐานข้อมูล ไม่สามารถตรวจสอบรหัสพนักงานอื่นได้ (แต่ใช้ 00/111 เข้าได้ครับ)");
-            return;
-        }
-
-        // ค้นหาพนักงานในคอลเลกชัน 'employees'
-        const snapshot = await db.collection('employees').where('id', '==', loginId).get();
-        
-        if (snapshot.empty) {
-            alert("ไม่พบรหัสพนักงานนี้ในระบบครับ");
-            return;
-        }
-
-        const employeeData = snapshot.docs[0].data();
-
-        // ตรวจสอบรหัสผ่าน
-        if (employeeData.password !== loginPass) {
-            alert("รหัสผ่านไม่ถูกต้องครับ");
-            return;
-        }
-
-        // ถ้ารหัสถูก ให้บันทึกข้อมูลและเข้าสู่ระบบ
-        localStorage.setItem('twomice_current_user', JSON.stringify(employeeData));
-        alert(`ยินดีต้อนรับ ${employeeData.name}`);
-        
-        // สั่งซ่อนหน้า Login และแสดงหน้าจอหลัก
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('mainPosScreen').style.display = 'block';
-
-    } catch (error) {
-        console.error("Login Error: ", error);
-        alert("เกิดข้อผิดพลาดในการตรวจสอบข้อมูล กรุณาลองใหม่อีกครั้ง");
-    }
-}
+    </script>
+</body>
+</html>
