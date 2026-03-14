@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two Mice POS (Ultimate V3)</title>
+    <title>Two Mice POS (Ultimate V4)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -192,7 +192,7 @@
             
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-blue-200 relative">
-                    <button onclick="injectDefaultMenu()" class="absolute top-6 right-6 bg-red-100 text-red-700 px-3 py-2 rounded-lg text-sm font-bold hover:bg-red-200 border border-red-300 transition">
+                    <button onclick="injectDefaultMenu()" class="absolute top-6 right-6 bg-red-100 text-red-700 px-3 py-2 rounded-lg text-sm font-bold hover:bg-red-200 border border-red-300 transition shadow-sm active:scale-95">
                         ⚠️ โหลดเมนูตั้งต้นทั้งหมด
                     </button>
                     <h2 class="text-xl font-bold mb-4 text-blue-700">🥤 จัดการเมนูเครื่องดื่ม & ท้อปปิ้ง</h2>
@@ -245,7 +245,7 @@
                         </div>
                     </div>
                 </div>
-                <button onclick="saveSystemSettings()" class="mt-4 bg-gray-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-700 w-full md:w-auto">บันทึกการตั้งค่าระบบ</button>
+                <button onclick="saveSystemSettings()" class="mt-4 bg-gray-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-700 w-full md:w-auto active:scale-95 transition">บันทึกการตั้งค่าระบบ</button>
             </div>
 
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-purple-200">
@@ -254,7 +254,7 @@
                     <input type="hidden" id="old-u-id">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
                         <input type="text" id="u-id" placeholder="ID (2 หลัก)" maxlength="2" class="border-2 p-3 rounded-lg font-bold text-center text-xl outline-none focus:border-purple-500">
-                        <input type="text" id="u-pass" placeholder="Pass (3 หลัก)" maxlength="3" class="border-2 p-3 rounded-lg font-bold text-center text-xl outline-none focus:border-purple-500">
+                        <input type="password" id="u-pass" placeholder="Pass (3 หลัก)" maxlength="3" class="border-2 p-3 rounded-lg font-bold text-center text-xl outline-none focus:border-purple-500">
                         <input type="text" id="u-name" placeholder="ชื่อพนักงาน" class="border-2 p-3 rounded-lg font-bold outline-none focus:border-purple-500 md:col-span-2">
                     </div>
                     <div class="mb-4 bg-white p-3 rounded-lg border">
@@ -270,8 +270,8 @@
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="saveUser()" class="bg-purple-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-purple-500 text-lg">บันทึกพนักงาน</button>
-                        <button onclick="cancelUserEdit()" class="bg-gray-400 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-500 text-lg">เคลียร์ฟอร์ม</button>
+                        <button onclick="saveUser()" class="bg-purple-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-purple-500 text-lg active:scale-95 transition">บันทึกพนักงาน</button>
+                        <button onclick="cancelUserEdit()" class="bg-gray-400 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-500 text-lg active:scale-95 transition">เคลียร์ฟอร์ม</button>
                     </div>
                 </div>
                 
@@ -343,7 +343,7 @@
     <script>
         // 👇👇👇 วาง FIREBASE CONFIG ของคุณตรงนี้ 👇👇👇
         const firebaseConfig = {
-            apiKey: "AIzaSyCTZ9MqTirZkosidhpHgnlH4a5TR_XxhLA", // ตัวอย่าง (โปรดเปลี่ยนเป็นของคุณ)
+            apiKey: "AIzaSyCTZ9MqTirZkosidhpHgnlH4a5TR_XxhLA", // โปรดเปลี่ยนเป็นของคุณ
             authDomain: "two-mice-57341.firebaseapp.com",
             projectId: "two-mice-57341",
             storageBucket: "two-mice-57341.firebasestorage.app",
@@ -376,7 +376,7 @@
             
             if(!id || !pass) return alert('กรุณากรอกข้อมูลให้ครบถ้วนครับ');
 
-            // บัญชีฉุกเฉิน (Super Admin Fallback) - เช็คว่าในระบบมี 00 ไหม ถ้าไม่มีให้สร้างใหม่เลย
+            // บัญชีฉุกเฉิน (Super Admin Fallback)
             if(id === '00' && pass === '111') {
                 const aDoc = await db.collection('users').doc('00').get();
                 if(!aDoc.exists) {
@@ -418,8 +418,8 @@
             }
             if(p.crm) nav.innerHTML += `<button onclick="showTab('crm')" class="bg-blue-900 px-4 py-2 rounded-xl font-bold hover:bg-blue-700 whitespace-nowrap transition">สมาชิก</button>`;
             if(p.dash) nav.innerHTML += `<button onclick="showTab('dash')" class="bg-blue-900 px-4 py-2 rounded-xl font-bold hover:bg-blue-700 whitespace-nowrap transition">ยอดขาย</button>`;
-            if(p.admin) nav.innerHTML += `<button onclick="showTab('admin')" class="bg-red-700 px-4 py-2 rounded-xl font-bold hover:bg-red-600 whitespace-nowrap transition shadow-sm">หลังร้าน</button>`;
             if(p.stock) nav.innerHTML += `<button onclick="showTab('stock')" class="bg-blue-900 px-4 py-2 rounded-xl font-bold hover:bg-blue-700 whitespace-nowrap transition">สต๊อก</button>`;
+            if(p.admin) nav.innerHTML += `<button onclick="showTab('admin')" class="bg-red-700 px-4 py-2 rounded-xl font-bold hover:bg-red-600 whitespace-nowrap transition shadow-sm">หลังร้าน</button>`;
             
             if(p.pos) showPOS('drink'); else if(p.crm) showTab('crm'); else if(p.dash) showTab('dash'); else if(p.stock) showTab('stock');
         }
@@ -488,6 +488,8 @@
         function renderPOSMenu() {
             const con = document.getElementById('menu-container'); con.innerHTML = '';
             let list = menuItems.filter(m => (m.type || 'drink') === currentPosMode && m.type !== 'topping');
+            
+            // เรียงหมวดหมู่ตามลำดับเพื่อความสวยงาม
             const cats = [...new Set(list.map(m => m.c))];
             
             cats.forEach(cat => {
@@ -502,7 +504,7 @@
                 con.innerHTML += html + `</div></div>`;
             });
 
-            // ท้อปปิ้งใน Modal
+            // ท้อปปิ้งใน Modal (หน้าจอเลือกความหวาน)
             const topDiv = document.getElementById('opt-toppings'); topDiv.innerHTML = '';
             let toppings = menuItems.filter(m => m.type === 'topping');
             toppings.forEach(t => {
@@ -512,16 +514,16 @@
 
         function clickMenuItem(name, price) {
             if(currentPosMode === 'food') {
-                // อาหาร: ลงตะกร้าเลย
+                // อาหาร: ลงตะกร้าทันที
                 cart.push({ cartId: Date.now(), n: name, p: price, basePrice: price, type: 'food', sweet: '', toppings: [], note: '' });
                 updateCartUI();
             } else {
-                // เครื่องดื่ม: เปิด Modal ถามข้อมูล
+                // เครื่องดื่ม: เปิด Modal ขึ้นมาบังคับเลือกรายละเอียด และพิมพ์หมายเหตุ
                 tempItemOpts = { n: name, p: price, type: 'drink' };
                 document.getElementById('opt-name').innerText = name;
                 document.querySelectorAll('.chk-topping').forEach(c => c.checked = false);
                 document.querySelector('input[name="sweet"][value="หวานปกติ 100%"]').click();
-                document.getElementById('opt-note').value = '';
+                document.getElementById('opt-note').value = ''; // เคลียร์ช่องหมายเหตุให้ว่าง
                 openModal('modal-options');
             }
         }
@@ -529,7 +531,7 @@
         function confirmOptions() {
             let sweet = document.querySelector('input[name="sweet"]:checked').value;
             let tops = []; let addPrice = 0;
-            let note = document.getElementById('opt-note').value.trim();
+            let note = document.getElementById('opt-note').value.trim(); // ดึงข้อความจากหมายเหตุ
             
             document.querySelectorAll('.chk-topping:checked').forEach(c => {
                 let [tn, tp] = c.value.split('|'); tops.push(tn); addPrice += parseInt(tp);
@@ -548,7 +550,7 @@
             cart.forEach(it => {
                 t += it.p;
                 let ex = [];
-                // Data Future-Proofing: ป้องกันข้อมูลเก่าหรือใหม่ที่ไม่มีฟิลด์นี้
+                // Data Future-Proofing: เช็คความปลอดภัยของข้อมูลก่อนแสดงผล ถ้าไม่มีก็ข้ามไป ไม่ error
                 if(it.type === 'drink' && it.sweet && it.sweet !== 'N/A') ex.push(`<span class="text-blue-600">${it.sweet}</span>`);
                 if(it.toppings && it.toppings.length) ex.push(`<span class="text-gray-500">+${it.toppings.join(', ')}</span>`);
                 if(it.note) ex.push(`<span class="text-red-500 font-bold">[${it.note}]</span>`);
@@ -583,6 +585,7 @@
                     phone: ph || '-', seller: currentUser.name, method: method
                 });
 
+                // อัปเดตแต้มสมาชิกจากจำนวน "ชิ้น" รวม
                 if(ph && totalItems > 0) {
                     const memRef = db.collection("members").doc(ph);
                     await db.runTransaction(async (t) => {
@@ -643,10 +646,12 @@
                 
                 let tStr = s.dateObj.toLocaleString('th-TH', { day: '2-digit', month: 'short', year:'2-digit', hour: '2-digit', minute: '2-digit' });
                 
-                // ตรรกะแสดงข้อมูลเก่า/ใหม่ ไม่ให้ Error (N/A)
+                // ตรรกะแสดงข้อมูลเก่า/ใหม่ ไม่ให้ Error (Data Future-Proofing)
                 let itemsTxt = s.items.map(i => {
                     let txt = `<span class="font-bold text-gray-800">${i.n}</span>`; let ex = [];
+                    // ถ้าหาค่าความหวานไม่เจอในออเดอร์เก่า โค้ดก็จะไม่พัง
                     if(i.type === 'drink') { let swt = (i.sweet && i.sweet !== '') ? i.sweet : 'N/A'; if(swt !== 'N/A') ex.push(`<span class="text-blue-600">${swt}</span>`); }
+                    // ถ้ามีท้อปปิ้ง หรือ มีหมายเหตุ ก็ค่อยแสดง ถ้าไม่มีก็ข้ามไป
                     if(i.toppings && i.toppings.length) ex.push(`<span class="text-gray-500">+${i.toppings.join('+')}</span>`);
                     if(i.note) ex.push(`<span class="text-red-500">[${i.note}]</span>`);
                     return ex.length ? `${txt} <span class="text-xs">(${ex.join(', ')})</span>` : txt;
@@ -658,6 +663,7 @@
             document.getElementById('sum-m').innerText = sumM.toLocaleString(); document.getElementById('sum-cash').innerText = sumCash.toLocaleString(); document.getElementById('sum-transfer').innerText = sumTrans.toLocaleString();
             document.getElementById('sum-d-m').innerText = sumDrinkM.toLocaleString(); document.getElementById('sum-d-c').innerText = sumDrinkC.toLocaleString(); document.getElementById('sum-d-cash').innerText = sumDrinkCash.toLocaleString(); document.getElementById('sum-d-trans').innerText = sumDrinkTrans.toLocaleString();
             document.getElementById('sum-f-m').innerText = sumFoodM.toLocaleString(); document.getElementById('sum-f-c').innerText = sumFoodC.toLocaleString(); document.getElementById('sum-f-cash').innerText = sumFoodCash.toLocaleString(); document.getElementById('sum-f-trans').innerText = sumFoodTrans.toLocaleString();
+            
             let topArr = Object.entries(itemCounts).sort((a,b) => b[1] - a[1]).slice(0,5);
             document.getElementById('top5-list').innerHTML = topArr.map((v,i) => `<li class="flex justify-between items-center bg-orange-50 p-2 rounded-lg border border-orange-100"><span class="font-bold text-gray-800">${i+1}. ${v[0]}</span> <span class="bg-orange-500 text-white px-2 py-1 rounded text-xs font-bold">${v[1]} ออเดอร์</span></li>`).join('');
         }
@@ -793,24 +799,40 @@
         }
 
         // ------------------ 7. Admin (เมนู พนักงาน ตั้งค่า) ------------------
-        // โหลดเมนูตั้งต้นรวดเดียว
+        
+        // ฟังก์ชันโหลดเมนูตั้งต้นชุดใหม่ทั้งหมด ตามที่คุณระบุเป๊ะๆ
         async function injectDefaultMenu() {
-            if(!confirm("⚠️ ยืนยันการเคลียร์เมนูเครื่องดื่มและท้อปปิ้งทั้งหมด แล้วแทนที่ด้วย 'เมนูตั้งต้น' ตามฐานข้อมูลหรือไม่? (เมนูอาหารเดิมจะยังอยู่)")) return;
+            if(!confirm("⚠️ คำเตือน: ระบบจะทำการลบเมนูเครื่องดื่มและท้อปปิ้งเก่าออกทั้งหมด แล้วแทนที่ด้วยเมนูตั้งต้นชุดใหม่ ยืนยันหรือไม่? (เมนูอาหารเดิมจะยังอยู่)")) return;
+            
             const newMenu = [
+                // ทูโทน 29 บาท
                 {c: 'ทูโทน', n: 'ดาร์กวาเลท', p: 29, type: 'drink'}, {c: 'ทูโทน', n: 'ดาร์กแมนดาริน', p: 29, type: 'drink'}, {c: 'ทูโทน', n: 'ดาร์กคอฟฟี่', p: 29, type: 'drink'}, {c: 'ทูโทน', n: 'ดาร์กบราวชูการ์', p: 29, type: 'drink'}, {c: 'ทูโทน', n: 'เขียวสตอนมสด', p: 29, type: 'drink'},
+                // กาแฟ 20 บาท
                 {c: 'กาแฟ', n: 'มอคคา', p: 20, type: 'drink'}, {c: 'กาแฟ', n: 'คาปูชิโน', p: 20, type: 'drink'}, {c: 'กาแฟ', n: 'ลาเต้', p: 20, type: 'drink'},
+                // บราวชูการ์ 20 บาท
                 {c: 'บราวชูการ์', n: 'ไต้หวันบราวชูการ์', p: 20, type: 'drink'}, {c: 'บราวชูการ์', n: 'ชาไทยบราวชูการ์', p: 20, type: 'drink'}, {c: 'บราวชูการ์', n: 'ชาเขียวบราวชูการ์', p: 20, type: 'drink'}, {c: 'บราวชูการ์', n: 'นมสดบราวชูการ์', p: 20, type: 'drink'},
+                // ชาธรรมดา 20 บาท
                 {c: 'ชาธรรมดา', n: 'ชาไต้หวัน', p: 20, type: 'drink'}, {c: 'ชาธรรมดา', n: 'ชาเขียว', p: 20, type: 'drink'}, {c: 'ชาธรรมดา', n: 'ชาไทย', p: 20, type: 'drink'},
+                // นมสดผลไม้ 20 บาท
                 {c: 'นมสดผลไม้', n: 'เผือกนมสด', p: 20, type: 'drink'}, {c: 'นมสดผลไม้', n: 'แคนตาลูปนมสด', p: 20, type: 'drink'}, {c: 'นมสดผลไม้', n: 'กล้วยนมสด', p: 20, type: 'drink'}, {c: 'นมสดผลไม้', n: 'ข้าวโพดนมสด', p: 20, type: 'drink'}, {c: 'นมสดผลไม้', n: 'สตอเบอร์รี่นมสด', p: 20, type: 'drink'}, {c: 'นมสดผลไม้', n: 'บลูเบอรี่นมสด', p: 20, type: 'drink'}, {c: 'นมสดผลไม้', n: 'ส้มแมนดารินนมสด', p: 20, type: 'drink'}, {c: 'นมสดผลไม้', n: 'กีวี่นมสด', p: 20, type: 'drink'}, {c: 'นมสดผลไม้', n: 'แอปเปิ้ลนมสด', p: 20, type: 'drink'},
+                // นมสดธรรมดา 20 บาท
                 {c: 'นมสดธรรมดา', n: 'นมชมพู', p: 20, type: 'drink'}, {c: 'นมสดธรรมดา', n: 'นมสด', p: 20, type: 'drink'}, {c: 'นมสดธรรมดา', n: 'ดาร์กนมสด', p: 29, type: 'drink'},
+                // ชาใส 20 บาท
                 {c: 'ชาใส', n: 'ชาเขียวสตอเบอร์รี่', p: 20, type: 'drink'}, {c: 'ชาใส', n: 'ชาเขียวลิ้นจี่', p: 20, type: 'drink'}, {c: 'ชาใส', n: 'ชาเขียวบลูฮาวาย', p: 20, type: 'drink'}, {c: 'ชาใส', n: 'ชาเขียวแอปเปิ้ล', p: 20, type: 'drink'}, {c: 'ชาใส', n: 'ชาเขียวส้มแมนดาริน', p: 20, type: 'drink'}, {c: 'ชาใส', n: 'ชาเขียวน้ำผึ้ง', p: 20, type: 'drink'},
+                // โซดา 20 บาท
                 {c: 'โซดา', n: 'สตอเบอร์รี่โซดา', p: 20, type: 'drink'}, {c: 'โซดา', n: 'บลูเบอร์รี่โซดา', p: 20, type: 'drink'}, {c: 'โซดา', n: 'บลูฮาวายโซดา', p: 20, type: 'drink'}, {c: 'โซดา', n: 'แดงโซดา', p: 20, type: 'drink'}, {c: 'โซดา', n: 'ส้มโซดา', p: 20, type: 'drink'}, {c: 'โซดา', n: 'ลิ้นจี่โซดา', p: 20, type: 'drink'}, {c: 'โซดา', n: 'แอปเปิ้ลโซดา', p: 20, type: 'drink'}, {c: 'โซดา', n: 'กีวี่โซดา', p: 20, type: 'drink'}, {c: 'โซดา', n: 'น้ำผึ้งโซดา', p: 20, type: 'drink'},
+                // น้ำอัดลม 25
                 {c: 'น้ำอัดลม', n: 'โค้กธรรมดา', p: 25, type: 'drink'}, {c: 'น้ำอัดลม', n: 'โค้กซีโร่', p: 25, type: 'drink'}, {c: 'น้ำอัดลม', n: 'สไปร์ท', p: 25, type: 'drink'}, {c: 'น้ำอัดลม', n: 'น้ำเขียว', p: 25, type: 'drink'}, {c: 'น้ำอัดลม', n: 'น้ำแดง', p: 25, type: 'drink'}, {c: 'น้ำอัดลม', n: 'น้ำฟ้า', p: 25, type: 'drink'}, {c: 'น้ำอัดลม', n: 'น้ำม่วง', p: 25, type: 'drink'},
+                // ท้อปปิ้ง
                 {c: 'ท้อปปิ้ง', n: 'ไข่มุก', p: 5, type: 'topping'}
             ];
+            
+            // ดึงรายการอาหารของเก่าเก็บไว้
             const oldFood = menuItems.filter(m => m.type === 'food');
+            
+            // นำอาหารเก่ามาต่อกับเครื่องดื่มใหม่ แล้วเซฟลงฐานข้อมูล
             await db.collection("settings").doc("menuData").set({items: [...oldFood, ...newMenu]});
-            alert('✅ อัปเดตเมนูตั้งต้นเรียบร้อยแล้ว!');
+            alert('✅ อัปเดตเมนูตั้งต้นชุดใหม่เรียบร้อยแล้วครับ!');
         }
 
         async function saveSystemSettings() {
@@ -828,7 +850,7 @@
             if(!newId || !pass || !name) return alert('กรอกข้อมูลพนักงานให้ครบ'); if(newId.length !== 2 || pass.length !== 3) return alert('ID ต้องเป็นเลข 2 หลัก / รหัสผ่านต้องเป็นเลข 3 หลัก');
             let p = { pos: document.getElementById('p-pos').checked, dash: document.getElementById('p-dash').checked, stock: document.getElementById('p-stock').checked, crm: document.getElementById('p-crm').checked, admin: document.getElementById('p-admin').checked, del: document.getElementById('p-del').checked };
             
-            // ป้องกันการเผลอลบบัญชี Super Admin (00) ออกจากระบบ
+            // ป้องกันการลบบัญชีฉุกเฉิน
             if(oldId === '00' && newId !== '00') return alert('❌ ไม่อนุญาตให้เปลี่ยน ID ของบัญชี 00 (แต่เปลี่ยนรหัสผ่านและชื่อได้)');
 
             if(oldId && oldId !== newId) {
