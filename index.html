@@ -353,18 +353,35 @@
 
         // ------------------ 1. Login & Auth ------------------
         async function login() {
-            const id = document.getElementById('login-id').value.trim(); const pass = document.getElementById('login-pass').value.trim();
-            if(!id || !pass) return alert('กรุณากรอกข้อมูลให้ครบถ้วนครับ');
-            if(id === '00' && pass === '111') {
-                const aDoc = await db.collection('users').doc('00').get();
-                if(!aDoc.exists) await db.collection("users").doc('00').set({ name: 'เจ้าของร้าน (Admin)', pass: '111', p: {pos:1, dash:1, stock:1, crm:1, admin:1, del:1} });
+            try {
+                const id = document.getElementById('login-id').value.trim(); 
+                const pass = document.getElementById('login-pass').value.trim();
+                
+                if(!id || !pass) return alert('กรุณากรอกข้อมูลให้ครบถ้วนครับ');
+                
+                // เช็คสร้างบัญชี Admin เริ่มต้น (00 / 111)
+                if(id === '00' && pass === '111') {
+                    const aDoc = await db.collection('users').doc('00').get();
+                    if(!aDoc.exists) {
+                        await db.collection("users").doc('00').set({ name: 'เจ้าของร้าน (Admin)', pass: '111', p: {pos:1, dash:1, stock:1, crm:1, admin:1, del:1} });
+                    }
+                }
+                
+                const doc = await db.collection('users').doc(id).get();
+                if(!doc.exists || doc.data().pass !== pass) return alert('ID หรือรหัสผ่านไม่ถูกต้อง');
+                
+                currentUser = { id: doc.id, ...doc.data() };
+                document.getElementById('login-screen').classList.add('hidden'); 
+                document.getElementById('app-screen').classList.remove('hidden');
+                document.getElementById('current-user-name').innerText = currentUser.name;
+                
+                buildNav(); 
+                loadAllData();
+            } catch (error) {
+                // ดักจับ Error และแจ้งเตือน
+                alert('🚨 เข้าสู่ระบบไม่ได้! ข้อผิดพลาด:\n' + error.message);
+                console.error("Login Error:", error);
             }
-            const doc = await db.collection('users').doc(id).get();
-            if(!doc.exists || doc.data().pass !== pass) return alert('ID หรือรหัสผ่านไม่ถูกต้อง');
-            currentUser = { id: doc.id, ...doc.data() };
-            document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-screen').classList.remove('hidden');
-            document.getElementById('current-user-name').innerText = currentUser.name;
-            buildNav(); loadAllData();
         }
 
         function logout() { currentUser = null; document.getElementById('app-screen').classList.add('hidden'); document.getElementById('login-screen').classList.remove('hidden'); document.getElementById('login-id').value = ''; document.getElementById('login-pass').value = ''; }
@@ -425,7 +442,7 @@
             } 
         }
         function verifyPinAndExecute() { const pin = document.getElementById('override-pin').value; if(pin === sysSettings.pin) { closeModal('modal-pin'); if(tempAction) tempAction(); } else alert('❌ รหัส PIN ผู้ดูแลไม่ถูกต้อง!'); document.getElementById('override-pin').value = ''; }
-        async function executeDeleteSale(id) { if(!confirm("⚠️ ยืนยันการลบบิลนี้อย่างถาวร? (ระบบจะหักแต้มสะสมคืนโดยอัตโนมัติ)")) return; const doc = await db.collection("sales").doc(id).get(); if(!doc.exists) return; const data = doc.data(); await db.collection("sales").doc(id).delete(); if(data.phone && data.phone !== '-') { const memRef = db.collection("members").doc(data.phone); await db.runTransaction(async t => { const md = await t.get(memRef); if(md.exists) { let totalItems = (data.cups||0) + (data.plates||0); let p = md.data().pts - totalItems; let l = md.data().life - totalItems; t.update(memRef, { pts: p < 0 ? 0 : p, l: l < 0 ? 0 : l }); } }); } alert('✅ ลบบิลและหักแต้มคืนเรียบร้อยแล้ว'); }
+        async function executeDeleteSale(id) { if(!confirm("⚠️ ยืนยันการลบบิลนี้อย่างถาวร? (ระบบจะหักแต้มสะสมคืนโดยอัตโนมัติ)")) return; const doc = await db.collection("sales").doc(id).get(); if(!doc.exists) return; const data = doc.data(); await db.collection("sales").doc(id).delete(); if(data.phone && data.phone !== '-') { const memRef = db.collection("members").doc(data.phone); await db.runTransaction(async t => { const md = await t.get(memRef); if(md.exists) { let totalItems = (data.cups||0) + (data.plates||0); let p = md.data().pts - totalItems; let l = md.data().life - totalItems; t.update(memRef, { pts: p < 0 ? 0 : p, life: l < 0 ? 0 : l }); } }); } alert('✅ ลบบิลและหักแต้มคืนเรียบร้อยแล้ว'); }
 
         // ================= EDIT / CREATE RETRO SALE LOGIC =================
         function getLocalDatetime(date) { const tzOffset = (new Date()).getTimezoneOffset() * 60000; return (new Date(date.getTime() - tzOffset)).toISOString().slice(0, 16); }
@@ -478,4 +495,225 @@
         }
 
         function addEditSaleItem() {
-            const val
+            const val = document.getElementById('es-new-item').value;
+            if(!val) return alert('กรุณาเลือกเมนูที่ต้องการเพิ่ม');
+            const [n, baseP, type] = val.split('|');
+            let p = parseInt(document.getElementById('es-new-price').value);
+            if(isNaN(p)) p = parseInt(baseP);
+            const note = document.getElementById('es-new-note').value.trim();
+            const sweet = document.getElementById('es-new-sweet').value;
+            
+            let finalSweet = sweet;
+            if (type === 'drink' && !finalSweet) finalSweet = 'ปกติ 100%';
+            else if (type !== 'drink') finalSweet = '';
+
+            editSaleItems.push({ cartId: Date.now(), n: n, p: p, basePrice: parseInt(baseP), type: type, sweet: finalSweet, toppings: [], note: note });
+            
+            document.getElementById('es-new-item').value = ''; document.getElementById('es-new-price').value = ''; document.getElementById('es-new-note').value = ''; document.getElementById('es-new-sweet').value = '';
+            renderEditSaleItems();
+        }
+
+        function removeEditSaleItem(idx) { editSaleItems.splice(idx, 1); renderEditSaleItems(); }
+        
+        function editItemProp(idx, prop, val) {
+            if(prop === 'p') { val = parseInt(val); if(isNaN(val)) val = editSaleItems[idx].basePrice || 0; }
+            editSaleItems[idx][prop] = val;
+            renderEditSaleItems();
+        }
+
+        function renderEditSaleItems() {
+            const list = document.getElementById('es-item-list'); list.innerHTML = '';
+            let t = 0;
+            editSaleItems.forEach((it, idx) => {
+                t += it.p;
+                let sweetSelect = '';
+                if(it.type === 'drink') {
+                    const sweets = ['หวานมาก 150%', 'ปกติ 100%', 'หวานน้อย 50%', 'ไม่หวาน 0%', 'N/A'];
+                    sweetSelect = `<select onchange="editItemProp(${idx}, 'sweet', this.value)" class="flex-1 text-xs p-2 border border-blue-200 rounded outline-none bg-white text-blue-700 font-bold shadow-sm">
+                        <option value="">-ความหวาน-</option>
+                        ${sweets.map(s => `<option value="${s}" ${it.sweet === s ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select>`;
+                }
+                
+                list.innerHTML += `
+                <div class="flex flex-col bg-white p-3 border-b border-gray-200 gap-2 hover:bg-gray-50 transition">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-gray-800">${it.n} ${it.toppings && it.toppings.length ? `<span class="text-gray-500 text-xs">(+${it.toppings.join(',')})</span>` : ''}</span>
+                        <div class="flex items-center gap-2">
+                            <input type="number" onchange="editItemProp(${idx}, 'p', this.value)" value="${it.p}" class="w-16 p-1 border rounded text-right font-bold text-blue-700 outline-none shadow-sm"> ฿
+                            <button onclick="removeEditSaleItem(${idx})" class="text-red-500 bg-red-50 px-3 py-1 rounded-md font-bold hover:bg-red-200 transition">✕</button>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 w-full">
+                        ${sweetSelect}
+                        <input type="text" onchange="editItemProp(${idx}, 'note', this.value)" value="${it.note || ''}" placeholder="หมายเหตุ / ท้อปปิ้ง" class="flex-[2] text-xs p-2 border border-gray-200 rounded outline-none text-red-500 font-bold shadow-sm">
+                    </div>
+                </div>`;
+            });
+            document.getElementById('es-total').innerText = t;
+        }
+
+        async function confirmEditSale() {
+            if(editSaleItems.length === 0) return alert('บิลต้องมีสินค้าอย่างน้อย 1 รายการ');
+            
+            const dateStr = document.getElementById('es-date').value;
+            const phone = document.getElementById('es-phone').value.trim() || '-';
+            const method = document.getElementById('es-method').value;
+            
+            if(!dateStr) return alert('กรุณาเลือกวันที่และเวลา');
+            const newDate = new Date(dateStr);
+            
+            let tBaht = 0; let nCups = 0; let nPlates = 0; let drinkTotal = 0; let foodTotal = 0;
+            editSaleItems.forEach(i => {
+                tBaht += i.p;
+                if(i.type === 'drink' || i.type === 'drink_topping' || i.type === 'topping') { nCups++; drinkTotal += i.p; }
+                else { nPlates++; foodTotal += i.p; }
+            });
+            let newTotalItems = nCups + nPlates;
+
+            try {
+                if (isCreateRetroMode) {
+                    // --- ➕ สร้างบิลย้อนหลัง (CREATE MODE) ---
+                    await db.collection("sales").add({
+                        time: firebase.firestore.Timestamp.fromDate(newDate),
+                        items: editSaleItems, total: tBaht, cups: nCups, plates: nPlates, drinkTotal: drinkTotal, foodTotal: foodTotal, phone: phone, method: method, seller: currentUser.name + ' (คีย์ย้อนหลัง)'
+                    });
+                    
+                    if(phone !== '-') {
+                        const newMemRef = db.collection("members").doc(phone);
+                        await db.runTransaction(async t => { const doc = await t.get(newMemRef); const d = doc.exists ? doc.data() : { pts: 0, life: 0, hist: [] }; t.set(newMemRef, { pts: (d.pts||0) + newTotalItems, life: (d.life||0) + newTotalItems }, { merge: true }); });
+                    }
+                    alert('✅ สร้างบิลย้อนหลังและให้แต้มสำเร็จ!');
+                } else {
+                    // --- ✏️ แก้ไขบิลเดิม (EDIT MODE) ---
+                    let oldPhone = editSaleOldInfo.phone || '-';
+                    let oldTotalItems = (editSaleOldInfo.cups || 0) + (editSaleOldInfo.plates || 0);
+                    if(!editSaleOldInfo.cups && !editSaleOldInfo.plates) oldTotalItems = editSaleOldInfo.items.length;
+
+                    await db.collection("sales").doc(editSaleTargetId).update({
+                        time: firebase.firestore.Timestamp.fromDate(newDate),
+                        items: editSaleItems, total: tBaht, cups: nCups, plates: nPlates, drinkTotal: drinkTotal, foodTotal: foodTotal, phone: phone, method: method
+                    });
+
+                    // คำนวณแต้มสะสม
+                    if (oldPhone !== phone) {
+                        if (oldPhone !== '-') {
+                            const oldMemRef = db.collection("members").doc(oldPhone);
+                            await db.runTransaction(async t => { const md = await t.get(oldMemRef); if(md.exists) { let p = md.data().pts - oldTotalItems; let l = md.data().life - oldTotalItems; t.update(oldMemRef, { pts: Math.max(0, p), life: Math.max(0, l) }); } });
+                        }
+                        if (phone !== '-') {
+                            const newMemRef = db.collection("members").doc(phone);
+                            await db.runTransaction(async t => { const doc = await t.get(newMemRef); const d = doc.exists ? doc.data() : { pts: 0, life: 0, hist: [] }; t.set(newMemRef, { pts: (d.pts||0) + newTotalItems, life: (d.life||0) + newTotalItems }, { merge: true }); });
+                        }
+                    } else if (oldPhone === phone && phone !== '-') {
+                        const diff = newTotalItems - oldTotalItems;
+                        if (diff !== 0) {
+                            const memRef = db.collection("members").doc(phone);
+                            await db.runTransaction(async t => { const md = await t.get(memRef); if(md.exists) { let p = md.data().pts + diff; let l = md.data().life + diff; t.update(memRef, { pts: Math.max(0, p), life: Math.max(0, l) }); } });
+                        }
+                    }
+                    alert('✅ บันทึกการแก้ไขบิลเรียบร้อยแล้ว!');
+                }
+
+                closeModal('modal-edit-sale');
+                applyFilter(); // รีเฟรชหน้า
+            } catch(e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
+        }
+
+        // โค้ดส่วนอื่นๆ คงเดิมครับ
+        async function searchPoints() { const p = document.getElementById('fPhone').value.trim(); if(!p) return alert('กรุณากรอกเบอร์โทร'); const doc = await db.collection("members").doc(p).get(); const resArea = document.getElementById('member-result'); const rwZone = document.getElementById('reward-zone'); resArea.classList.remove('hidden'); resArea.classList.add('flex'); if (doc.exists) { const data = doc.data(); const pts = data.pts || 0; document.getElementById('crm-pts').innerText = pts; document.getElementById('crm-lifetime').innerText = data.life || 0; if(pts >= sysSettings.promoTarget) { rwZone.innerHTML = `<button onclick="claimReward('${p}')" class="bg-green-600 text-white px-8 py-4 rounded-xl font-bold text-2xl w-full hover:bg-green-500 shadow-xl active:scale-95 transition border-4 border-green-400">🎁 กดรับสิทธิ์: ${sysSettings.promoReward} (หัก ${sysSettings.promoTarget} แต้ม)</button>`; } else { rwZone.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200 font-bold text-lg">⚠️ ขาดอีก ${sysSettings.promoTarget - pts} แต้ม จึงจะสามารถแลกได้</div>`; } const histList = document.getElementById('crm-history'); histList.innerHTML = ''; if(data.hist && data.hist.length > 0) { [...data.hist].reverse().forEach(h => { let d = h.date.toDate ? h.date.toDate().toLocaleString('th-TH',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : ''; histList.innerHTML += `<li class="border-b border-gray-200 pb-2"><span class="text-gray-500 text-xs block mb-1">📅 ${d}</span><span class="font-bold text-gray-800">✅ แลกรับ: <span class="text-blue-600">${h.reward}</span></span></li>`; }); } else histList.innerHTML = '<li class="text-gray-400 italic text-center py-4">ยังไม่เคยมีประวัติการแลกของรางวัล</li>'; } else { document.getElementById('crm-pts').innerText = "0"; document.getElementById('crm-lifetime').innerText = "0"; rwZone.innerHTML = ''; document.getElementById('crm-history').innerHTML = '<li class="text-gray-400 text-center py-4">ไม่พบประวัติลูกค้าเบอร์นี้ (ระบบจะเริ่มนับแต้มเมื่อซื้อครั้งแรก)</li>'; } }
+        async function claimReward(phone) { if(!confirm(`ยืนยันการหัก ${sysSettings.promoTarget} แต้ม เพื่อแลก ${sysSettings.promoReward}?`)) return; const ref = db.collection("members").doc(phone); await db.runTransaction(async t => { const doc = await t.get(ref); const d = doc.data(); let newHist = d.hist || []; newHist.push({ date: new Date(), reward: sysSettings.promoReward, used: sysSettings.promoTarget }); t.update(ref, { pts: d.pts - sysSettings.promoTarget, hist: newHist }); }); alert('🎉 ทำรายการแลกสิทธิ์สำเร็จ!'); searchPoints(); }
+        async function saveSystemSettings() { let pin = document.getElementById('set-pin').value; let target = parseInt(document.getElementById('set-target').value); let rw = document.getElementById('set-reward').value; if(!pin || isNaN(target) || !rw) return alert('กรอกข้อมูลการตั้งค่าให้ครบถ้วน'); await db.collection("settings").doc("system").set({ pin: pin, promoTarget: target, promoReward: rw }, {merge:true}); alert('✅ บันทึกการตั้งค่าระบบสำเร็จ'); }
+        function toggleAllPerms(el) { ['p-pos','p-dash','p-stock','p-crm','p-admin','p-del'].forEach(id => document.getElementById(id).checked = el.checked); }
+        function cancelUserEdit() { document.getElementById('old-u-id').value = ''; document.getElementById('u-id').value = ''; document.getElementById('u-pass').value = ''; document.getElementById('u-name').value = ''; document.getElementById('p-all').checked = false; toggleAllPerms(document.getElementById('p-all')); }
+        function editUser(id) { const u = usersList.find(x => x.id === id); if(!u) return; document.getElementById('old-u-id').value = u.id; document.getElementById('u-id').value = u.id; document.getElementById('u-pass').value = u.pass; document.getElementById('u-name').value = u.name; document.getElementById('p-pos').checked = u.p.pos; document.getElementById('p-dash').checked = u.p.dash; document.getElementById('p-stock').checked = u.p.stock; document.getElementById('p-crm').checked = u.p.crm; document.getElementById('p-admin').checked = u.p.admin; document.getElementById('p-del').checked = u.p.del; }
+        async function saveUser() { let oldId = document.getElementById('old-u-id').value; let newId = document.getElementById('u-id').value.trim(); let pass = document.getElementById('u-pass').value.trim(); let name = document.getElementById('u-name').value.trim(); if(!newId || !pass || !name) return alert('กรอกข้อมูลพนักงานให้ครบ'); if(newId.length !== 2 || pass.length !== 3) return alert('ID ต้องเป็นเลข 2 หลัก / รหัสผ่านต้องเป็นเลข 3 หลัก'); let p = { pos: document.getElementById('p-pos').checked, dash: document.getElementById('p-dash').checked, stock: document.getElementById('p-stock').checked, crm: document.getElementById('p-crm').checked, admin: document.getElementById('p-admin').checked, del: document.getElementById('p-del').checked }; if(oldId === '00' && newId !== '00') return alert('❌ ไม่อนุญาตให้เปลี่ยน ID ของบัญชี 00 (แต่เปลี่ยนรหัสผ่านและชื่อได้)'); if(oldId && oldId !== newId) { await db.collection("users").doc(newId).set({name, pass, p}); await db.collection("users").doc(oldId).delete(); if(currentUser.id === oldId) currentUser.id = newId; } else await db.collection("users").doc(newId).set({name, pass, p}); alert('✅ บันทึกข้อมูลพนักงานสำเร็จ'); cancelUserEdit(); }
+        function renderUsers() { const l = document.getElementById('user-list'); l.innerHTML = ''; usersList.forEach(u => { let pStr = Object.keys(u.p).filter(k => u.p[k]).join(', '); l.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-3 font-bold text-lg text-blue-800">${u.id}</td><td class="p-3 font-bold text-gray-700">${u.name}</td><td class="p-3 text-xs text-gray-500 uppercase tracking-wider">[${pStr}]</td><td class="p-3 text-center"><button onclick="editUser('${u.id}')" class="text-blue-600 font-bold bg-blue-50 px-4 py-2 rounded-lg mr-2 border border-blue-200 hover:bg-blue-100 active:scale-95 transition">แก้ไข</button>${u.id !== '00' ? `<button onclick="deleteUser('${u.id}')" class="text-red-500 font-bold bg-red-50 px-4 py-2 rounded-lg border border-red-200 hover:bg-red-100 active:scale-95 transition">ลบ</button>` : '<span class="text-xs text-gray-400 px-4">ห้ามลบ</span>'}</td></tr>`; }); }
+        async function deleteUser(id) { if(confirm('ยืนยันการลบบัญชีพนักงานคนนี้?')) await db.collection("users").doc(id).delete(); }
+
+        async function saveStockItem() { const id = document.getElementById('stock-id').value; const name = document.getElementById('s-name').value.trim(); const cost = parseInt(document.getElementById('s-cost').value); if(!name || isNaN(cost)) return alert('กรุณากรอกชื่อวัตถุดิบและต้นทุนให้ถูกต้อง'); if(id) await db.collection("stock_items").doc(id).update({name, cost}); else await db.collection("stock_items").add({name, cost, qty: 0}); document.getElementById('s-name').value = ''; document.getElementById('s-cost').value = ''; document.getElementById('stock-id').value = ''; }
+        function renderStock() { const list = document.getElementById('stock-list'); list.innerHTML = ''; stockItems.forEach(s => { list.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4 font-bold text-lg text-gray-800">${s.name}</td><td class="p-4 text-center text-gray-500 font-bold">${s.cost} ฿</td><td class="p-4 text-center text-3xl font-bold ${s.qty <= 10 ? 'text-red-500' : 'text-green-600'}">${s.qty}</td><td class="p-4 text-center"><div class="flex justify-center gap-2"><button onclick="openStockInOut('${s.id}','${s.name}')" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-bold hover:bg-blue-200 border border-blue-300 shadow-sm active:scale-95 transition">🔄 เบิก/ซื้อมา</button><button onclick="deleteStockForever('${s.id}')" class="bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-200 border border-red-300 shadow-sm active:scale-95 transition">🗑️ ลบถาวร</button></div></td></tr>`; }); }
+        async function deleteStockForever(id) { if(confirm('⚠️ คำเตือน: ยืนยันการลบวัตถุดิบนี้ออกจากระบบอย่างถาวร?')) await db.collection("stock_items").doc(id).delete(); }
+        function openStockInOut(id, name) { document.getElementById('stk-m-id').value = id; document.getElementById('stk-m-name').innerText = name; openModal('modal-stock'); }
+        async function confirmStockInOut() { const id = document.getElementById('stk-m-id').value; const name = document.getElementById('stk-m-name').innerText; const type = document.getElementById('stk-m-type').value; const amt = parseInt(document.getElementById('stk-m-amt').value); const reason = document.getElementById('stk-m-reason').value.trim() || '-'; if(isNaN(amt) || amt <= 0) return alert('กรุณาใส่ตัวเลขจำนวนชิ้นให้ถูกต้อง'); const ref = db.collection("stock_items").doc(id); await db.runTransaction(async t => { const doc = await t.get(ref); let newQty = doc.data().qty + (type === 'IN' ? amt : -amt); t.update(ref, { qty: newQty }); }); await db.collection("stock_logs").add({ time: firebase.firestore.FieldValue.serverTimestamp(), itemId: id, itemName: name, type: type === 'IN' ? 'ซื้อมา' : 'เบิก', amount: amt, reason: reason, user: currentUser.name }); closeModal('modal-stock'); document.getElementById('stk-m-amt').value = ''; document.getElementById('stk-m-reason').value = ''; }
+                // ฟังก์ชันช่วยดาวน์โหลดไฟล์ CSV
+        function downloadCSV(csvContent, fileName) {
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' }); // ใส่ \uFEFF เพื่อให้ Excel อ่านภาษาไทยได้
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // โหลดประวัติยอดขาย
+        function exportSalesExcel() {
+            if (!allSales || allSales.length === 0) return alert('ไม่มีข้อมูลยอดขายสำหรับดาวน์โหลดครับ');
+            
+            // สร้าง Header ของตาราง
+            let csv = "วันที่,เวลา,รายการสินค้า (รายละเอียด),ยอดรวม (บาท),รูปแบบชำระ,เบอร์ลูกค้า,พนักงานที่ขาย\n";
+            
+            // วนลูปเอาข้อมูลยัดลงตาราง
+            allSales.forEach(s => {
+                let dStr = s.dateObj ? s.dateObj.toLocaleDateString('th-TH') : '';
+                let tStr = s.dateObj ? s.dateObj.toLocaleTimeString('th-TH') : '';
+                
+                // จัดกลุ่มรายการสินค้าในบิลให้เป็นข้อความเดียว
+                let itemsTxt = s.items.map(i => {
+                    let ex = [];
+                    if(i.type === 'drink' && i.sweet && i.sweet !== 'N/A') ex.push(i.sweet);
+                    if(i.toppings && i.toppings.length) ex.push(i.toppings.join('+'));
+                    if(i.note) ex.push(`หมายเหตุ: ${i.note}`);
+                    let detail = ex.length ? `(${ex.join(', ')})` : '';
+                    return `${i.n} ${detail}`;
+                }).join(' / ');
+                
+                itemsTxt = `"${itemsTxt}"`; // ใส่เครื่องหมายคำพูดครอบไว้ ป้องกันปัญหาเครื่องหมายลูกน้ำในข้อความตีกัน
+                
+                csv += `${dStr},${tStr},${itemsTxt},${s.total},${s.method},${s.phone},${s.seller}\n`;
+            });
+            
+            // สั่งโหลดไฟล์
+            downloadCSV(csv, `Sales_Export_${new Date().toISOString().slice(0,10)}.csv`);
+        }
+
+        // โหลดประวัติสต๊อกเข้า-ออก
+        async function exportStockExcel() {
+            try {
+                // ดึงประวัติจาก stock_logs (ดึงล่าสุด 1000 รายการ)
+                const snap = await db.collection("stock_logs").orderBy("time", "desc").limit(1000).get();
+                if (snap.empty) return alert('ยังไม่มีประวัติการเบิก/ซื้อเข้าสต๊อกครับ');
+                
+                let csv = "วันที่,เวลา,ชื่อวัตถุดิบ,ประเภทรายการ,จำนวน (ชิ้น),เหตุผล/หมายเหตุ,พนักงานที่ทำรายการ\n";
+                
+                snap.forEach(doc => {
+                    let d = doc.data();
+                    let dateObj = d.time ? d.time.toDate() : new Date();
+                    let dateStr = dateObj.toLocaleDateString('th-TH');
+                    let timeStr = dateObj.toLocaleTimeString('th-TH');
+                    let reason = d.reason ? `"${d.reason}"` : "-";
+                    
+                    csv += `${dateStr},${timeStr},${d.itemName},${d.type},${d.amount},${reason},${d.user}\n`;
+                });
+                
+                downloadCSV(csv, `Stock_History_${new Date().toISOString().slice(0,10)}.csv`);
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการโหลดข้อมูลสต๊อก: ' + e.message);
+            }
+        }
+
+
+        function renderAdminMenu() { const listD = document.getElementById('admin-drink-list'); const listF = document.getElementById('admin-food-list'); listD.innerHTML = ''; listF.innerHTML = ''; menuItems.forEach((m, i) => { let isFood = m.type === 'food' || m.type === 'food_topping'; let isTop = m.type === 'topping' || m.type === 'drink_topping' || m.type === 'food_topping'; let icon = isTop ? '🍡 ท้อปปิ้ง' : m.c; let html = `<li class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 mb-2 shadow-sm hover:border-blue-300 transition"><div><span class="text-xs bg-gray-200 px-3 py-1 rounded-full mr-3 font-bold text-gray-600">${icon}</span><b class="text-lg text-gray-800">${m.n}</b></div><div class="flex items-center gap-3"><span class="font-bold text-blue-700 text-lg mr-2">${m.p}.-</span><button onclick="editMenu(${i}, '${m.type}')" class="text-yellow-600 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-lg text-sm font-bold hover:bg-yellow-100 active:scale-95 transition">✏️ แก้ไข</button><button onclick="deleteMenu(${i})" class="text-red-500 px-3 py-1 bg-red-50 border border-red-200 rounded-lg text-sm font-bold hover:bg-red-100 active:scale-95 transition">🗑️ ลบ</button></div></li>`; if(isFood) listF.innerHTML += html; else listD.innerHTML += html; }); }
+        function editMenu(idx, type) { let m = menuItems[idx]; if(type === 'food' || type === 'food_topping') { document.getElementById('edit-f-idx').value = idx; document.getElementById('m-f-cat').value = m.c || ''; document.getElementById('m-f-name').value = m.n; document.getElementById('m-f-price').value = m.p; document.getElementById('m-f-topping').checked = (m.type === 'food_topping'); document.getElementById('btn-cancel-food').classList.remove('hidden'); } else { document.getElementById('edit-d-idx').value = idx; document.getElementById('m-d-cat').value = m.c || ''; document.getElementById('m-d-name').value = m.n; document.getElementById('m-d-price').value = m.p; document.getElementById('m-d-topping').checked = (m.type === 'drink_topping' || m.type === 'topping'); document.getElementById('btn-cancel-drink').classList.remove('hidden'); } }
+        function cancelMenuEdit(type) { if(type === 'food') { document.getElementById('edit-f-idx').value = -1; document.getElementById('m-f-cat').value = ''; document.getElementById('m-f-name').value = ''; document.getElementById('m-f-price').value = ''; document.getElementById('m-f-topping').checked = false; document.getElementById('btn-cancel-food').classList.add('hidden'); } else { document.getElementById('edit-d-idx').value = -1; document.getElementById('m-d-cat').value = ''; document.getElementById('m-d-name').value = ''; document.getElementById('m-d-price').value = ''; document.getElementById('m-d-topping').checked = false; document.getElementById('btn-cancel-drink').classList.add('hidden'); } }
+        async function saveMenu(type) { let m = {}; let idx = -1; if(type === 'food') { idx = parseInt(document.getElementById('edit-f-idx').value); let isTop = document.getElementById('m-f-topping').checked; m = { c: isTop ? 'ท้อปปิ้งอาหาร' : (document.getElementById('m-f-cat').value.trim() || 'อาหารทั่วไป'), n: document.getElementById('m-f-name').value.trim(), p: parseInt(document.getElementById('m-f-price').value), type: isTop ? 'food_topping' : 'food' }; } else { idx = parseInt(document.getElementById('edit-d-idx').value); let isTop = document.getElementById('m-d-topping').checked; m = { c: isTop ? 'ท้อปปิ้งน้ำ' : (document.getElementById('m-d-cat').value.trim() || 'เครื่องดื่มทั่วไป'), n: document.getElementById('m-d-name').value.trim(), p: parseInt(document.getElementById('m-d-price').value), type: isTop ? 'drink_topping' : 'drink' }; } if(!m.n || isNaN(m.p)) return alert('กรุณากรอกชื่อและราคาให้ครบถ้วน'); if(idx > -1) menuItems[idx] = m; else menuItems.push(m); await db.collection("settings").doc("menuData").set({items: menuItems}); cancelMenuEdit(type); alert('✅ บันทึกเมนูสำเร็จ'); }
+        async function deleteMenu(idx) { if(!confirm('ยืนยันการลบเมนูนี้?')) return; menuItems.splice(idx, 1); await db.collection("settings").doc("menuData").set({items: menuItems}); }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+    </script>
+</body>
+</html>
